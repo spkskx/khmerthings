@@ -137,6 +137,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         result: int = args.func(args)
     except ValueError as exc:  # e.g. unknown --include source
         parser.error(str(exc))
+    except OSError as exc:  # e.g. missing or unreadable input file
+        print(f"khmerthings: error: {exc}", file=sys.stderr)
+        return 1
     return result
 
 

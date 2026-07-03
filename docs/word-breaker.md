@@ -4,10 +4,10 @@
 
 Splits Khmer text into words. Khmer script writes **no spaces between
 words** — spaces only separate phrases — so "splitting on whitespace" does
-not work for Khmer the way it does for English. The word breaker finds the
-word boundaries using a dictionary and a deterministic longest-match
-algorithm, and gives you the result either as a list of words or as the
-original text with boundary markers inserted.
+not work for Khmer the way it does for English. The word breaker finds word
+boundaries using a dictionary and a deterministic longest-match algorithm,
+and returns the result either as a list of words or as the original text
+with boundary markers inserted.
 
 This is the foundational operation for almost everything else: search
 indexing, line breaking, keyword extraction, text statistics, and machine
@@ -35,45 +35,87 @@ break_words("ខ្ញុំស្រឡាញ់ភាសាខ្មែរ")
 ## CLI reference
 
 ```
-khmerthings segment [files ...] [--separator SEP] [--mark]
+khmerthings segment [files ...] [--separator SEP] [--mark] [--include names,modern]
 ```
 
-- **`files`** — one or more input files; `-` or no argument reads stdin.
-  Each line of input produces one line of output.
-- **`--separator SEP`** — the string placed between words. Defaults to a
-  single space, or to a zero-width space (U+200B) in `--mark` mode.
-- **`--mark`** — instead of listing words, reproduce each line exactly as-is
-  and only *insert* the separator at Khmer word boundaries. Existing spaces
-  and punctuation are untouched. This is the "insert ZWSP" operation that
-  line-breaking engines and many text pipelines expect.
-- **`--include names,modern`** — also match against the extra built-in
-  wordlists: `names` (personal names, surnames, honorific titles) and
-  `modern` (slang, informal register, loanwords, trending vocabulary).
-  The core wordlist is always active.
-- Exit code 0 on success.
+Every option, with a real example of its effect:
 
-Examples (real output):
+### Input: files, multiple files, or stdin
+
+`files` is zero or more paths; `-` or no argument reads stdin. Each input
+line produces one output line, files processed in order:
+
+```sh
+$ khmerthings segment a.txt b.txt        # a.txt: two lines, b.txt: one line
+ខ្ញុំ ស្រឡាញ់ ភាសា ខ្មែរ
+សួស្តី SokSan
+ថ្ងៃនេះ ខ្ញុំ ទៅ ផ្សារ
+
+$ echo "ខ្ញុំស្រឡាញ់ភាសាខ្មែរ" | khmerthings segment -
+ខ្ញុំ ស្រឡាញ់ ភាសា ខ្មែរ
+```
+
+Note the second line above: in the default *words mode*, punctuation (the
+`!` after `SokSan`) and whitespace are dropped — the output is words only,
+joined by the separator.
+
+### `--separator SEP` — choose the joiner
+
+Default is a single space:
 
 ```sh
 $ echo "ថ្ងៃនេះខ្ញុំទៅសាលារៀន" | khmerthings segment --separator "|"
 ថ្ងៃនេះ|ខ្ញុំ|ទៅ|សាលារៀន
-
-$ echo "ខ្ញុំទៅ ផ្សារ។" | khmerthings segment --mark --separator "·"
-ខ្ញុំ·ទៅ ផ្សារ។
 ```
 
-Note how `--mark` kept the existing space and the ។ untouched and only
-inserted a marker between the two adjacent Khmer words.
+Any string works, including multi-character separators (`--separator " / "`)
+or a tab (`--separator "$(printf '\t')"` in a shell).
 
-Names and slang segment correctly once their wordlists are included:
+### `--mark` — insert boundaries, change nothing else
+
+Reproduces each line exactly, only *inserting* the separator between
+adjacent Khmer words. Existing spaces, punctuation, and non-Khmer text are
+untouched — the "insert ZWSP" operation that line-breaking engines expect:
 
 ```sh
-$ echo "សុខាដារ៉ាទៅភ្នំពេញ" | khmerthings segment --include names
-សុខា ដារ៉ា ទៅ ភ្នំពេញ
-
-$ echo "ហ្វេសប៊ុកឡូយណាស់" | khmerthings segment --include modern
-ហ្វេសប៊ុក ឡូយ ណាស់
+$ echo "ខ្ញុំទៅ ផ្សារ។ OK!" | khmerthings segment --mark --separator "|"
+ខ្ញុំ|ទៅ ផ្សារ។ OK!
 ```
+
+Without `--separator`, `--mark` inserts a **zero-width space** (U+200B) —
+invisible in a terminal but present in the bytes:
+
+```sh
+$ echo "ខ្ញុំទៅផ្សារ" | khmerthings segment --mark        # looks unchanged...
+ខ្ញុំ​ទៅ​ផ្សារ
+$ echo "ខ្ញុំទៅផ្សារ" | khmerthings segment --mark | grep -c $'​'
+1
+```
+
+Rule of thumb: use words mode to *extract* words, `--mark` to *annotate*
+text you will keep.
+
+### `--include names,modern` — match extra wordlists
+
+The core vocabulary is always active; `--include` adds the extra built-in
+wordlists (comma-separated): `names` (personal names, surnames, honorific
+titles) and `modern` (slang, informal register, loanwords, trending terms).
+
+```sh
+$ echo "សុខាដារ៉ាឡូយណាស់" | khmerthings segment
+សុខាដារ៉ាឡូយ ណាស់                 # names+slang → one unknown span
+
+$ echo "សុខាដារ៉ាឡូយណាស់" | khmerthings segment --include names,modern
+សុខា ដារ៉ា ឡូយ ណាស់
+```
+
+### Exit codes & errors
+
+- `0` — success.
+- `1` — an input file could not be read; a one-line message goes to stderr:
+  `khmerthings: error: [Errno 2] No such file or directory: '...'`
+- `2` — bad usage (unknown flag, unknown `--include` source); argparse
+  prints the usage message to stderr.
 
 ## Python API
 
@@ -81,23 +123,38 @@ $ echo "ហ្វេសប៊ុកឡូយណាស់" | khmerthings segment 
 
 Returns the words of `text` in order of appearance: Khmer words (dictionary
 matches and unknown spans), Latin words, and numbers. Whitespace and
-punctuation are excluded.
+punctuation are excluded. Empty input returns `[]`.
 
 ```python
 from khmerthings import break_words
 
 break_words("ខ្ញុំ love ១២៣ 456។")
 # ['ខ្ញុំ', 'love', '១២៣', '456']
+
+break_words("")
+# []
+```
+
+Unknown Khmer spans are kept as single items — never dropped, never
+guessed:
+
+```python
+from khmerthings import Lexicon
+
+lex = Lexicon(["ខ្ញុំ", "ទៅ"])            # your own dictionary
+break_words("ខ្ញុំសាលារៀនទៅ", lex)
+# ['ខ្ញុំ', 'សាលារៀន', 'ទៅ']              # middle item matched nothing
 ```
 
 `len(break_words(text))` always equals
-[`count_words(text)`](word-counter.md) — the two tools agree on what a word
-is.
+[`count_words(text)`](word-counter.md) — the two tools agree on what a
+word is.
 
 ### `mark_boundaries(text, separator="​", lexicon=None) -> str`
 
 Returns `text` (NFC-normalized) with `separator` inserted between adjacent
-Khmer words. Nothing else changes.
+Khmer words. Nothing else changes. Default separator is the zero-width
+space U+200B.
 
 ```python
 from khmerthings import mark_boundaries
@@ -107,6 +164,9 @@ mark_boundaries("ខ្ញុំទៅផ្សារ")
 
 mark_boundaries("ខ្ញុំទៅផ្សារ", separator=" | ")
 # 'ខ្ញុំ | ទៅ | ផ្សារ'
+
+mark_boundaries("ខ្ញុំទៅ ផ្សារ។ OK!", separator="|")
+# 'ខ្ញុំ|ទៅ ផ្សារ។ OK!'                    # space, ។ and Latin untouched
 ```
 
 Removing every `separator` from the result reproduces the NFC input exactly
@@ -115,7 +175,7 @@ Removing every `separator` from the result reproduces the NFC input exactly
 ### Choosing wordlists: `load_lexicon(*sources)`
 
 The dictionary ships as three independently growable data files, merged on
-demand:
+demand. `WORD_SOURCES` lists them:
 
 | Source | Contents |
 |---|---|
@@ -124,15 +184,29 @@ demand:
 | `modern` | slang, informal register, loanwords, trending vocabulary |
 
 ```python
-from khmerthings import load_lexicon, break_words
+from khmerthings import WORD_SOURCES, load_lexicon, break_words
 
-lex = load_lexicon("words", "names", "modern")
+sorted(WORD_SOURCES)
+# ['modern', 'names', 'words']
+
+lex = load_lexicon("words", "names", "modern")   # cached; any combination
 break_words("ឯកឧត្តមទៅសៀមរាប", lex)
 # ['ឯកឧត្តម', 'ទៅ', 'សៀមរាប']
+
+load_lexicon("nope")
+# ValueError: unknown word source 'nope'; available: ['modern', 'names', 'words']
 ```
 
-Both functions also accept any custom `khmerthings.Lexicon` you build from
-your own wordlist.
+Or build a fully custom dictionary: `Lexicon(iterable_of_khmer_words)` /
+`Lexicon.from_lines(open("mywords.txt"))`. Entries must be NFC, Khmer
+letters/marks only, and unique, or the constructor raises `ValueError`.
+
+### Advanced: token positions
+
+If you need character offsets or token types (e.g. to highlight words in a
+UI), use the lower-level `khmerthings.tokenize(text, lexicon=None)`, which
+returns `Token(text, type, start, end)` objects covering the entire input
+losslessly.
 
 ## How it works
 
@@ -143,7 +217,7 @@ your own wordlist.
 3. Each Khmer run is split into **character clusters** — a base consonant
    plus its subscript consonants, vowel, and signs. Clusters are the atomic
    units of Khmer script; a word boundary can only fall between clusters.
-4. Words are matched **greedily, longest first**, against a hand-curated
+4. Words are matched **greedily, longest first**, against the hand-curated
    dictionary stored in a trie keyed by clusters.
 5. Cluster runs that match no dictionary word are kept as single *unknown*
    spans — they are never dropped, and they still count as words.
@@ -157,11 +231,21 @@ your own wordlist.
 - **Accuracy scales with the dictionary.** The built-in wordlists are
   hand-curated and growing (802 entries across `words`/`names`/`modern` as
   of v0.4.0). Words not in them come back as unsegmented unknown spans
-  rather than being split incorrectly.
-  Greedy longest-match can also occasionally over-match compounds. If
-  segmentation quality matters for your use case, you can supply your own
-  larger `Lexicon` — or contribute words upstream (see
-  [DEVELOPMENT_GUIDE.md](../DEVELOPMENT_GUIDE.md)).
+  rather than being split incorrectly. Greedy longest-match can also
+  occasionally over-match compounds. If segmentation quality matters for
+  your use case, supply a larger `Lexicon` — or contribute words upstream
+  (see [DEVELOPMENT_GUIDE.md](../DEVELOPMENT_GUIDE.md)).
+
+## Task recipes
+
+| Goal | Do this |
+|---|---|
+| Words of a string, as a list | `break_words(text)` |
+| Best recall on real-world text | `break_words(text, load_lexicon("words", "names", "modern"))` or `--include names,modern` |
+| Make Khmer text line-breakable | `mark_boundaries(text)` or `khmerthings segment --mark` |
+| Visible word boundaries for review | `khmerthings segment --mark --separator "|"` |
+| One word per line (for `sort`, `uniq`, …) | `khmerthings segment --separator "$(printf '\n')"` or iterate `break_words` in Python |
+| Segment against a domain dictionary | `break_words(text, Lexicon.from_lines(open("domain.txt")))` |
 
 ## Related tools
 

@@ -84,11 +84,16 @@ change — not as an afterthought:
 - **Self-update this file (AGENTS.md)** when architecture, constraints,
   commands, tools, or conventions change (e.g. a new module or subcommand).
 - **Every main (end-user) tool has its own `docs/<tool>.md`** written for
-  community users, following the shared template: What it does / Quick
-  start / CLI reference / Python API / How it works / Guarantees &
-  limitations / Related tools. Low-level primitives are documented via
-  docstrings only, not `docs/`. All example outputs in docs must be real —
-  run the command and paste the actual output, never invent it.
+  community users *and for AI agents driving the tools autonomously*,
+  following the shared template: What it does / Quick start / CLI
+  reference / Python API / How it works / Guarantees & limitations / Task
+  recipes / Related tools. Requirements: **every** CLI flag and API
+  parameter gets a concrete example with its output; exit codes and error
+  output are documented; a "Task recipes" table maps goals → exact
+  commands/calls. Low-level primitives are documented via docstrings only,
+  not `docs/`. All example outputs must be real — run the command and
+  paste the actual output, never invent it (a wrong "expected" output has
+  already been caught this way).
 - **Update the other docs** touched by the change: `README.md` (landing
   page: tool table, roadmap, examples), the affected `docs/*.md`,
   `DEVELOPMENT_GUIDE.md` (workflow, recipes), docstrings.

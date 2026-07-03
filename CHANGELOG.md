@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-07-03
+
+### Changed
+
+- Per-tool docs rewritten for autonomous (AI-agent and scripted) use:
+  every CLI flag and Python API parameter now has a concrete example with
+  real executed output, exit codes and error output are documented, and
+  each doc ends with a "Task recipes" table mapping goals to exact
+  commands/calls.
+
+### Fixed
+
+- CLI: a missing/unreadable input file now exits with code 1 and a
+  one-line `khmerthings: error: ...` message instead of a Python traceback.
+
 ## [0.4.0] - 2026-07-03
 
 ### Added
@@ -92,7 +107,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (lint, Python 3.11–3.14 test matrix, build + wheel smoke test), MIT
   license, AGENTS.md/CLAUDE.md, DEVELOPMENT_GUIDE.md, PR template.
 
-[Unreleased]: https://github.com/spkskx/khmerthings/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/spkskx/khmerthings/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/spkskx/khmerthings/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/spkskx/khmerthings/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/spkskx/khmerthings/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/spkskx/khmerthings/compare/v0.1.0...v0.2.0

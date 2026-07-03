@@ -130,6 +130,11 @@ class TestMain:
         assert main(["sort", str(a), str(b)]) == 0
         assert capsys.readouterr().out == "ក\nខ\nគ\n"
 
+    def test_missing_file_is_a_clean_error(self, capsys: pytest.CaptureFixture[str]) -> None:
+        assert main(["count", "/nonexistent/path.txt"]) == 1
+        err = capsys.readouterr().err
+        assert err.startswith("khmerthings: error:")
+
     def test_missing_subcommand_errors(self) -> None:
         with pytest.raises(SystemExit) as exc:
             main([])

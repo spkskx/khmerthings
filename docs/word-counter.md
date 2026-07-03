@@ -10,8 +10,7 @@ words, unknown Khmer spans, Latin words, numbers, character clusters, and
 raw character counts.
 
 Typical uses: word-count limits for articles and translations, corpus
-statistics, pricing translation work, and progress metrics for writing
-tools.
+statistics, pricing translation work, progress metrics for writing tools.
 
 ## Quick start
 
@@ -57,17 +56,42 @@ This definition is shared with the [word breaker](word-breaker.md):
 ## CLI reference
 
 ```
-khmerthings count [files ...] [--json]
+khmerthings count [files ...] [--json] [--include names,modern]
 ```
 
-- **`files`** — one or more input files; `-` or no argument reads stdin.
-  With multiple files, each result is labelled with its filename.
-- **`--json`** — machine-readable output: a JSON array with one object per
-  input, each carrying a `source` field plus all count fields.
-- **`--include names,modern`** — also match against the extra built-in
-  wordlists (`names`: personal names and titles; `modern`: slang and
-  loanwords), so e.g. names count as known words instead of unknown spans.
-- Exit code 0 on success.
+Every option, with a real example of its effect:
+
+### Input: files, multiple files, or stdin
+
+`files` is zero or more paths; `-` or no argument reads stdin. With
+multiple files, each result block is labelled with its path:
+
+```sh
+$ khmerthings count a.txt b.txt
+a.txt:
+  total_words: 6
+  khmer_words: 5
+  unknown_khmer_words: 0
+  latin_words: 1
+  numbers: 0
+  clusters: 10
+  khmer_characters: 27
+  characters: 37
+b.txt:
+  total_words: 4
+  khmer_words: 4
+  unknown_khmer_words: 0
+  latin_words: 0
+  numbers: 0
+  clusters: 6
+  khmer_characters: 19
+  characters: 20
+```
+
+### `--json` — machine-readable output
+
+Always a JSON array (even for one input), one object per input, fields in a
+fixed order. `source` is the file path, or `<stdin>`:
 
 ```sh
 $ echo "ខ្ញុំស្រឡាញ់ភាសាខ្មែរ" | khmerthings count --json
@@ -86,17 +110,54 @@ $ echo "ខ្ញុំស្រឡាញ់ភាសាខ្មែរ" | khmer
 ]
 ```
 
-(`characters` is 22 here because `echo` appends a newline.)
+(`characters` is 22 here because `echo` appends a newline.) Parse with
+`jq`: `khmerthings count --json *.txt | jq 'map(.total_words) | add'`.
+
+### `--include names,modern` — match extra wordlists
+
+The core vocabulary is always active; `--include` adds the `names`
+(personal names, surnames, titles) and/or `modern` (slang, loanwords)
+wordlists, so such text counts as known words instead of unknown spans:
+
+```sh
+$ echo "ហ្វេសប៊ុកឡូយណាស់" | khmerthings count | grep -E "khmer_words|unknown"
+  khmer_words: 2
+  unknown_khmer_words: 2
+
+$ echo "ហ្វេសប៊ុកឡូយណាស់" | khmerthings count --include modern | grep -E "khmer_words|unknown"
+  khmer_words: 3
+  unknown_khmer_words: 0
+```
+
+(Without `modern`, the counter even mis-finds the core word ស inside the
+loanword ហ្វេសប៊ុក — a concrete example of why the right wordlist matters.)
+
+### Exit codes & errors
+
+- `0` — success.
+- `1` — an input file could not be read; one-line message on stderr:
+  `khmerthings: error: [Errno 2] No such file or directory: '...'`
+- `2` — bad usage (unknown flag, unknown `--include` source).
 
 ## Python API
 
 ### `count_words(text, lexicon=None) -> int`
 
-The total word count, as defined above.
+The total word count, as defined above. Empty or whitespace-only text
+returns `0`.
+
+```python
+from khmerthings import count_words
+
+count_words("ខ្ញុំស្រឡាញ់ភាសាខ្មែរ")   # 4
+count_words("hello beautiful world")     # 3
+count_words("។៕ !?")                     # 0 (punctuation only)
+count_words("")                          # 0
+```
 
 ### `analyze(text, lexicon=None) -> WordCount`
 
-The full breakdown as an immutable dataclass:
+The full breakdown as an immutable (frozen) dataclass:
 
 ```python
 from khmerthings import analyze
@@ -109,26 +170,43 @@ analyze("ខ្ញុំស្រឡាញ់ភាសាខ្មែរ")
 
 Field meanings:
 
+- `total_words` — sum of the four word categories below.
 - `khmer_words` / `unknown_khmer_words` — dictionary-matched words vs
-  unknown Khmer spans (a high unknown count means the dictionary is missing
-  vocabulary for your text, not that the text is wrong).
+  unknown Khmer spans. A high unknown count means the dictionary is missing
+  vocabulary for your text, not that the text is wrong.
+- `latin_words` — runs of non-Khmer letters.
 - `numbers` — number tokens, whether Arabic (`456`) or Khmer (`១២៣`) digits.
 - `clusters` — Khmer character clusters (user-perceived characters), often
   more useful than codepoint counts for Khmer.
-- `khmer_characters` / `characters` — codepoint counts (of Khmer characters,
-  and of the whole NFC-normalized text).
+- `khmer_characters` / `characters` — codepoint counts (Khmer only, and the
+  whole NFC-normalized text respectively).
 
-Both functions accept `lexicon=` (a `khmerthings.Lexicon`) to count against
-your own wordlist, or a merged built-in one:
+It serializes cleanly for pipelines:
 
 ```python
-from khmerthings import analyze, load_lexicon
+import dataclasses, json
 
-analyze(text, lexicon=load_lexicon("words", "names", "modern"))
+json.dumps(dataclasses.asdict(analyze("ខ្ញុំ love ១២៣")), ensure_ascii=False)
+# {"total_words": 3, "khmer_words": 1, "unknown_khmer_words": 0,
+#  "latin_words": 1, "numbers": 1, "clusters": 4, "khmer_characters": 8,
+#  "characters": 14}
 ```
 
-See the [word breaker doc](word-breaker.md) for the list of built-in
-wordlist sources.
+### Counting with other wordlists
+
+Pass any `Lexicon` via `lexicon=` — a merged built-in one or your own:
+
+```python
+from khmerthings import Lexicon, analyze, load_lexicon
+
+analyze("សុខាឡូយ").unknown_khmer_words                                    # 1
+analyze("សុខាឡូយ", load_lexicon("words", "names", "modern")).unknown_khmer_words  # 0
+
+analyze(text, lexicon=Lexicon.from_lines(open("domain.txt")))   # custom
+```
+
+See the [word breaker doc](word-breaker.md#choosing-wordlists-load_lexiconsources)
+for the list of built-in wordlist sources.
 
 ## How it works
 
@@ -147,9 +225,20 @@ dictionary. The counter then tallies the resulting tokens by type.
   lower bound. The `unknown_khmer_words` field tells you how much of the
   text that caveat applies to.
 - **Accuracy scales with the dictionary** (802 hand-curated entries across
-  the `words`/`names`/`modern` sources as of v0.4.0, growing). Supply your
-  own `Lexicon`, use `--include`, or contribute words upstream (see
-  [DEVELOPMENT_GUIDE.md](../DEVELOPMENT_GUIDE.md)).
+  the `words`/`names`/`modern` sources as of v0.4.0, growing). Use
+  `--include`/`load_lexicon`, supply your own `Lexicon`, or contribute
+  words upstream (see [DEVELOPMENT_GUIDE.md](../DEVELOPMENT_GUIDE.md)).
+
+## Task recipes
+
+| Goal | Do this |
+|---|---|
+| Just the number | `count_words(text)` |
+| Full stats, programmatic | `analyze(text)` (frozen dataclass) |
+| Full stats, shell pipeline | `khmerthings count --json ... \| jq` |
+| Best accuracy on names/slang-heavy text | add `--include names,modern` / `load_lexicon("words", "names", "modern")` |
+| Judge dictionary coverage of a corpus | compare `unknown_khmer_words` vs `khmer_words` |
+| Word count of many files, total | `khmerthings count --json *.txt \| jq 'map(.total_words) | add'` |
 
 ## Related tools
 
