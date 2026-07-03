@@ -15,7 +15,18 @@ from importlib import resources
 from khmerthings.chars import ZERO_WIDTH_SPACE, is_khmer_letter_or_mark
 from khmerthings.clusters import segment_clusters
 
-__all__ = ["Lexicon", "default_lexicon"]
+__all__ = ["WORD_SOURCES", "Lexicon", "default_lexicon", "load_lexicon"]
+
+#: Built-in wordlist sources shipped with the package. Each is an
+#: independently curated, growable data file under ``khmerthings/data/``:
+#: - "words": core vocabulary (the default)
+#: - "names": personal names, surnames, honorific titles
+#: - "modern": slang, informal register, loanwords, trending vocabulary
+WORD_SOURCES: dict[str, str] = {
+    "words": "words.txt",
+    "names": "names.txt",
+    "modern": "modern.txt",
+}
 
 _END = "\x00"  # trie sentinel; cannot collide with any cluster
 
@@ -84,8 +95,32 @@ class Lexicon:
         return best
 
 
+def load_lexicon(*sources: str) -> Lexicon:
+    """Load and merge built-in wordlist sources into one lexicon.
+
+    *sources* are keys of :data:`WORD_SOURCES` (``"words"``, ``"names"``,
+    ``"modern"``); with no arguments the core ``"words"`` source is loaded.
+    Each file is validated independently (duplicates within a file are an
+    error); the same entry appearing in several files is merged. Results
+    are cached per source combination.
+
+    >>> lex = load_lexicon("words", "names", "modern")
+    """
+    return _load_lexicon_cached(sources or ("words",))
+
+
 @cache
+def _load_lexicon_cached(sources: tuple[str, ...]) -> Lexicon:
+    merged: set[str] = set()
+    for source in sources:
+        filename = WORD_SOURCES.get(source)
+        if filename is None:
+            raise ValueError(f"unknown word source {source!r}; available: {sorted(WORD_SOURCES)}")
+        text = (resources.files("khmerthings") / "data" / filename).read_text("utf-8")
+        merged |= set(Lexicon.from_lines(text.splitlines()))
+    return Lexicon(merged)
+
+
 def default_lexicon() -> Lexicon:
-    """The built-in seed lexicon shipped with the package."""
-    text = (resources.files("khmerthings") / "data" / "words.txt").read_text("utf-8")
-    return Lexicon.from_lines(text.splitlines())
+    """The built-in core lexicon (the ``"words"`` source)."""
+    return load_lexicon("words")

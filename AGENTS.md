@@ -8,10 +8,15 @@ Deterministic Khmer language tools in Python. Note: the repo directory is
 - **Deterministic only.** Every tool must be rule/algorithm/dictionary-based.
   Same input → same output, always. No probabilistic models, no LLMs, no ML
   inference at runtime.
-- **No third-party Khmer NLP code or data.** Do not add dependencies on or
-  copy from other Khmer NLP projects. The lexicon
-  (`src/khmerthings/data/words.txt`) is hand-curated, self-owned data — grow
-  it, never import a wordlist.
+- **No third-party Khmer NLP code; word data is self-curated.** Do not add
+  dependencies on or copy from other Khmer NLP projects, and never
+  bulk-import someone else's wordlist. Web research to *find and verify*
+  candidate words/names/slang is allowed (user decision, 2026-07-03) — but
+  every entry is curated individually, spellings cross-checked, and sources
+  noted in the data file header. Data files under `src/khmerthings/data/`:
+  `words.txt` (core), `names.txt` (names, surnames, titles), `modern.txt`
+  (slang, informal, loanwords, trending). All three are growable and merged
+  via `load_lexicon(*sources)`.
 - **Zero runtime dependencies.** Stdlib only. Dev tools (pytest, ruff, mypy)
   are the only allowed dependencies.
 - **Tests are the top priority.** Every module ships with table-driven unit
@@ -39,8 +44,10 @@ considering any change done.
    single-character contract: multi-char input raises `ValueError`).
 2. `clusters.py` — Khmer character-cluster (KCC) segmentation. Cluster
    boundaries are the only legal word boundaries.
-3. `lexicon.py` + `data/words.txt` — wordlist + trie keyed by clusters;
-   `longest_match` is the segmentation primitive.
+3. `lexicon.py` + `data/*.txt` — wordlists (`words`/`names`/`modern`) +
+   trie keyed by clusters; `longest_match` is the segmentation primitive;
+   `load_lexicon(*sources)` merges sources (cached), `--include` on the
+   CLI exposes the extra ones.
 4. `tokenizer.py` — lossless typed tokenization (Khmer words via greedy
    longest-match; unknown Khmer spans become `KHMER_UNKNOWN`, never dropped).
 5. `counter.py` — word counter tool (`count_words`, `analyze`).
@@ -104,8 +111,11 @@ change — not as an afterthought:
 - Python ≥ 3.11, mypy `strict`, ruff line length 100.
 - Public API re-exported in `__init__.py` with `__all__`; keep `py.typed`.
 - Frozen dataclasses for result types (`Token`, `WordCount`).
-- `words.txt`: one word per line, UTF-8, NFC, `#` comments, grouped by
-  category. High-frequency words with subscript ta/da (្ត/្ដ) spelling
-  variation are listed in both spellings — real-world text mixes them.
+- Wordlist files (`words.txt`, `names.txt`, `modern.txt`): one entry per
+  line, UTF-8, NFC, Khmer letters/marks only, `#` comments, grouped by
+  category, sources noted in the header. High-frequency words with
+  subscript ta/da (្ត/្ដ) spelling variation are listed in both spellings —
+  real-world text mixes them. Within a file duplicates are a load error;
+  the same entry in different files is fine (merged at load).
 - Khmer test strings: verify codepoints carefully (visually identical strings
   can differ, e.g. ្ត vs ្ដ); assert exact expected values, hand-verified.

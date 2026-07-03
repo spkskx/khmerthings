@@ -81,6 +81,33 @@ class TestMain:
         assert main(["segment", "--mark", "--separator", "/", str(f)]) == 0
         assert capsys.readouterr().out == "ខ្ញុំ/ទៅ/ផ្សារ\n"
 
+    def test_segment_include_names(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        f = tmp_path / "text.txt"
+        # Two adjacent given names, both only in the names wordlist.
+        f.write_text("សុខាដារ៉ា\n", encoding="utf-8")
+        assert main(["segment", str(f)]) == 0
+        assert capsys.readouterr().out == "សុខាដារ៉ា\n"  # one unknown span without names
+        assert main(["segment", "--include", "names", str(f)]) == 0
+        assert capsys.readouterr().out == "សុខា ដារ៉ា\n"
+
+    def test_count_include_modern(self, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+        f = tmp_path / "text.txt"
+        # ឡូយ (slang) + ហ្វេសប៊ុក (loanword) are only in the modern wordlist.
+        f.write_text("ហ្វេសប៊ុកឡូយណាស់", encoding="utf-8")
+        assert main(["count", "--include", "modern", str(f)]) == 0
+        out = capsys.readouterr().out
+        assert "khmer_words: 3" in out
+        assert "unknown_khmer_words: 0" in out
+
+    def test_include_unknown_source_errors(self, tmp_path: Path) -> None:
+        f = tmp_path / "text.txt"
+        f.write_text("ខ្ញុំ", encoding="utf-8")
+        with pytest.raises(SystemExit) as exc:
+            main(["count", "--include", "bogus", str(f)])
+        assert exc.value.code == 2
+
     def test_sort_file(self, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
         f = tmp_path / "lines.txt"
         f.write_text("ខ\nក\nគ\n", encoding="utf-8")

@@ -13,6 +13,7 @@ from collections.abc import Sequence
 
 from khmerthings import __version__
 from khmerthings.counter import analyze
+from khmerthings.lexicon import WORD_SOURCES, Lexicon, load_lexicon
 from khmerthings.segmenter import break_words, mark_boundaries
 from khmerthings.sorting import sort_lines
 
@@ -27,12 +28,27 @@ def _read_source(path: str) -> tuple[str, str]:
         return path, f.read()
 
 
+def _lexicon_from_args(args: argparse.Namespace) -> Lexicon:
+    includes = tuple(s.strip() for s in (args.include or "").split(",") if s.strip())
+    return load_lexicon("words", *includes)
+
+
+def _add_include_option(parser: argparse.ArgumentParser) -> None:
+    extra = sorted(set(WORD_SOURCES) - {"words"})
+    parser.add_argument(
+        "--include",
+        metavar=",".join(extra),
+        help=f"extra wordlists to match against, comma-separated (available: {', '.join(extra)})",
+    )
+
+
 def _cmd_count(args: argparse.Namespace) -> int:
     paths: list[str] = args.files or ["-"]
+    lexicon = _lexicon_from_args(args)
     results = []
     for path in paths:
         source, text = _read_source(path)
-        results.append({"source": source, **dataclasses.asdict(analyze(text))})
+        results.append({"source": source, **dataclasses.asdict(analyze(text, lexicon))})
 
     if args.json:
         print(json.dumps(results, ensure_ascii=False, indent=2))
@@ -48,6 +64,7 @@ def _cmd_count(args: argparse.Namespace) -> int:
 
 def _cmd_segment(args: argparse.Namespace) -> int:
     paths: list[str] = args.files or ["-"]
+    lexicon = _lexicon_from_args(args)
     if args.mark:
         separator = args.separator if args.separator is not None else "​"
     else:
@@ -56,9 +73,9 @@ def _cmd_segment(args: argparse.Namespace) -> int:
         _, text = _read_source(path)
         for line in text.splitlines():
             if args.mark:
-                print(mark_boundaries(line, separator))
+                print(mark_boundaries(line, separator, lexicon))
             else:
-                print(separator.join(break_words(line)))
+                print(separator.join(break_words(line, lexicon)))
     return 0
 
 
@@ -84,6 +101,7 @@ def _build_parser() -> argparse.ArgumentParser:
     count = subparsers.add_parser("count", help="count words in Khmer (or mixed) text")
     count.add_argument("files", nargs="*", help="input files, or '-' for stdin (default)")
     count.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    _add_include_option(count)
     count.set_defaults(func=_cmd_count)
 
     segment = subparsers.add_parser(
@@ -99,6 +117,7 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="preserve the line as-is and only insert separators at Khmer word boundaries",
     )
+    _add_include_option(segment)
     segment.set_defaults(func=_cmd_segment)
 
     sort = subparsers.add_parser(
@@ -112,8 +131,12 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    args = _build_parser().parse_args(argv)
-    result: int = args.func(args)
+    parser = _build_parser()
+    args = parser.parse_args(argv)
+    try:
+        result: int = args.func(args)
+    except ValueError as exc:  # e.g. unknown --include source
+        parser.error(str(exc))
     return result
 
 

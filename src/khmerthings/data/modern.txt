@@ -1,0 +1,44 @@
+# khmerthings modern lexicon: slang, informal register, loanwords, and
+# trending vocabulary. One entry per line, UTF-8, NFC, Khmer letters/marks only.
+# Hand-curated entry by entry; candidates researched from public sources and
+# contemporary Khmer media usage (spellings cross-checked, no wordlist
+# imported wholesale):
+#   - https://km.wiktionary.org/wiki/ស្ទាវ
+#   - https://thmeythmey.com/detail/130843 (ឡូយ)
+#   - https://ling-app.com/blog/khmer-slang-words/
+# This register shifts quickly; entries here are expected to grow and be
+# revised more often than words.txt.
+#
+# --- slang & informal ---
+ឡូយ
+ស្ទាវ
+ឡប់
+ភ្លើ
+ចង្រៃ
+ម៉ង
+អេម
+ប្រូ
+អញ
+ហែង
+# --- internet, tech & media loanwords ---
+ហ្វេសប៊ុក
+យូធូប
+តេឡេក្រាម
+អនឡាញ
+អ៊ីនធឺណិត
+វីដេអូ
+កាមេរ៉ា
+ហ្គេម
+ស្មាតហ្វូន
+ឡាយ
+សែលហ្វី
+# --- everyday modern loanwords ---
+កូវីដ
+វ៉ាក់សាំង
+ដុល្លារ
+ម៉ាស៊ីន
+ម៉ូដ
+សាំង
+កាដូ
+ភីហ្សា
+ប៊ិច

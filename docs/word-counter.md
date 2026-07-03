@@ -64,6 +64,9 @@ khmerthings count [files ...] [--json]
   With multiple files, each result is labelled with its filename.
 - **`--json`** — machine-readable output: a JSON array with one object per
   input, each carrying a `source` field plus all count fields.
+- **`--include names,modern`** — also match against the extra built-in
+  wordlists (`names`: personal names and titles; `modern`: slang and
+  loanwords), so e.g. names count as known words instead of unknown spans.
 - Exit code 0 on success.
 
 ```sh
@@ -116,7 +119,16 @@ Field meanings:
   and of the whole NFC-normalized text).
 
 Both functions accept `lexicon=` (a `khmerthings.Lexicon`) to count against
-your own wordlist.
+your own wordlist, or a merged built-in one:
+
+```python
+from khmerthings import analyze, load_lexicon
+
+analyze(text, lexicon=load_lexicon("words", "names", "modern"))
+```
+
+See the [word breaker doc](word-breaker.md) for the list of built-in
+wordlist sources.
 
 ## How it works
 
@@ -134,9 +146,10 @@ dictionary. The counter then tallies the resulting tokens by type.
   several real words, so Khmer word counts on dictionary-poor text are a
   lower bound. The `unknown_khmer_words` field tells you how much of the
   text that caveat applies to.
-- **Accuracy scales with the dictionary** (582 hand-curated words as of
-  v0.3.0, growing). Supply your own `Lexicon` or contribute words upstream
-  (see [DEVELOPMENT_GUIDE.md](../DEVELOPMENT_GUIDE.md)).
+- **Accuracy scales with the dictionary** (802 hand-curated entries across
+  the `words`/`names`/`modern` sources as of v0.4.0, growing). Supply your
+  own `Lexicon`, use `--include`, or contribute words upstream (see
+  [DEVELOPMENT_GUIDE.md](../DEVELOPMENT_GUIDE.md)).
 
 ## Related tools
 

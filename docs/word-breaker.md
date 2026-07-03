@@ -46,6 +46,10 @@ khmerthings segment [files ...] [--separator SEP] [--mark]
   and only *insert* the separator at Khmer word boundaries. Existing spaces
   and punctuation are untouched. This is the "insert ZWSP" operation that
   line-breaking engines and many text pipelines expect.
+- **`--include names,modern`** — also match against the extra built-in
+  wordlists: `names` (personal names, surnames, honorific titles) and
+  `modern` (slang, informal register, loanwords, trending vocabulary).
+  The core wordlist is always active.
 - Exit code 0 on success.
 
 Examples (real output):
@@ -60,6 +64,16 @@ $ echo "ខ្ញុំទៅ ផ្សារ។" | khmerthings segment --mark -
 
 Note how `--mark` kept the existing space and the ។ untouched and only
 inserted a marker between the two adjacent Khmer words.
+
+Names and slang segment correctly once their wordlists are included:
+
+```sh
+$ echo "សុខាដារ៉ាទៅភ្នំពេញ" | khmerthings segment --include names
+សុខា ដារ៉ា ទៅ ភ្នំពេញ
+
+$ echo "ហ្វេសប៊ុកឡូយណាស់" | khmerthings segment --include modern
+ហ្វេសប៊ុក ឡូយ ណាស់
+```
 
 ## Python API
 
@@ -98,9 +112,27 @@ mark_boundaries("ខ្ញុំទៅផ្សារ", separator=" | ")
 Removing every `separator` from the result reproduces the NFC input exactly
 (as long as the separator does not already occur in the input).
 
-Both functions accept an optional `lexicon=` argument (a
-`khmerthings.Lexicon`) to segment against your own wordlist instead of the
-built-in one.
+### Choosing wordlists: `load_lexicon(*sources)`
+
+The dictionary ships as three independently growable data files, merged on
+demand:
+
+| Source | Contents |
+|---|---|
+| `words` | core vocabulary (the default) |
+| `names` | personal names, surnames, honorific titles |
+| `modern` | slang, informal register, loanwords, trending vocabulary |
+
+```python
+from khmerthings import load_lexicon, break_words
+
+lex = load_lexicon("words", "names", "modern")
+break_words("ឯកឧត្តមទៅសៀមរាប", lex)
+# ['ឯកឧត្តម', 'ទៅ', 'សៀមរាប']
+```
+
+Both functions also accept any custom `khmerthings.Lexicon` you build from
+your own wordlist.
 
 ## How it works
 
@@ -122,9 +154,10 @@ built-in one.
   randomness, no network.
 - **Lossless.** No character is ever dropped or reordered; `--mark` output
   minus the separators is exactly the NFC input.
-- **Accuracy scales with the dictionary.** The built-in lexicon is
-  hand-curated and growing (582 words as of v0.3.0). Words not in it come
-  back as unsegmented unknown spans rather than being split incorrectly.
+- **Accuracy scales with the dictionary.** The built-in wordlists are
+  hand-curated and growing (802 entries across `words`/`names`/`modern` as
+  of v0.4.0). Words not in them come back as unsegmented unknown spans
+  rather than being split incorrectly.
   Greedy longest-match can also occasionally over-match compounds. If
   segmentation quality matters for your use case, you can supply your own
   larger `Lexicon` — or contribute words upstream (see

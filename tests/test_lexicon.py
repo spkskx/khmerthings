@@ -1,7 +1,8 @@
 import pytest
 
 from khmerthings.clusters import segment_clusters
-from khmerthings.lexicon import Lexicon, default_lexicon
+from khmerthings.clusters import segment_clusters as segment_clusters_for_match
+from khmerthings.lexicon import WORD_SOURCES, Lexicon, default_lexicon, load_lexicon
 
 
 class TestConstruction:
@@ -87,3 +88,48 @@ class TestDefaultLexicon:
     def test_all_entries_valid(self) -> None:
         # Re-validating via the constructor exercises every entry.
         Lexicon(list(default_lexicon()))
+
+
+class TestLoadLexicon:
+    def test_no_args_loads_core_words(self) -> None:
+        assert load_lexicon() is load_lexicon("words")
+        assert default_lexicon() is load_lexicon("words")
+
+    def test_caching_per_combination(self) -> None:
+        assert load_lexicon("words", "names") is load_lexicon("words", "names")
+
+    @pytest.mark.parametrize("source", sorted(WORD_SOURCES))
+    def test_each_source_loads_and_validates(self, source: str) -> None:
+        lex = load_lexicon(source)
+        assert len(lex) > 0
+        Lexicon(list(lex))  # every entry re-validates
+
+    def test_names_source(self) -> None:
+        names = load_lexicon("names")
+        for entry in ["សុខា", "ហ៊ុន", "ឯកឧត្តម", "បុប្ផា", "ដារ៉ា"]:
+            assert entry in names
+        assert "ខ្ញុំ" not in names  # core vocabulary lives in words.txt
+
+    def test_modern_source(self) -> None:
+        modern = load_lexicon("modern")
+        for entry in ["ឡូយ", "ស្ទាវ", "ហ្វេសប៊ុក", "អនឡាញ", "កូវីដ"]:
+            assert entry in modern
+        assert "ខ្ញុំ" not in modern
+
+    def test_merge_deduplicates_across_files(self) -> None:
+        # ខៀវ is both a color (words) and a surname (names).
+        assert "ខៀវ" in load_lexicon("words")
+        assert "ខៀវ" in load_lexicon("names")
+        merged = load_lexicon("words", "names", "modern")
+        assert len(merged) < len(load_lexicon("words")) + len(load_lexicon("names")) + len(
+            load_lexicon("modern")
+        )
+        assert len(merged) >= len(load_lexicon("words"))
+
+    def test_merged_lexicon_matches_names(self) -> None:
+        merged = load_lexicon("words", "names")
+        assert merged.longest_match(segment_clusters_for_match("សុខា")) == 2  # សុ ខា
+
+    def test_unknown_source_raises(self) -> None:
+        with pytest.raises(ValueError, match="unknown word source"):
+            load_lexicon("words", "nope")

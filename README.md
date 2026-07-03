@@ -47,8 +47,12 @@ sort_lines(["ក្រ", "កា", "កក"])                    # ['កក', '�
 
 - **Deterministic**: same input, same output, always. Rule- and
   dictionary-based algorithms only; nothing probabilistic.
-- **Self-contained**: zero runtime dependencies; the lexicon is our own
-  hand-curated data (582 words and growing), no imported wordlists.
+- **Self-contained**: zero runtime dependencies; all word data is our own
+  hand-curated set of growable wordlists — `words` (core vocabulary),
+  `names` (people's names & titles), and `modern` (slang, loanwords,
+  trending terms) — 802 entries and growing. Candidates are researched from
+  public sources and verified entry by entry; no wordlist is imported
+  wholesale.
 - **Lossless**: no character is ever dropped — unknown Khmer spans are
   reported, not discarded.
 - **Tested first**: every module ships with table-driven unit tests and
@@ -62,8 +66,9 @@ docstrings if you want to build on them directly.
 ## Roadmap
 
 - ✅ Word counter, line sorter, word breaker
-- ⏳ Lexicon growth (hand-curated batches each release — the accuracy lever
-  for every dictionary-based tool)
+- ⏳ Wordlist growth across all three sources (`words`, `names`, `modern`) —
+  hand-curated batches each release; the accuracy lever for every
+  dictionary-based tool
 - 🔜 Spellchecker & spellfixer (engine is feasible today; waiting on lexicon
   coverage to make its verdicts trustworthy)
 - Later: part-of-speech tagger, intent detection, paragraph categorization

@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-07-03
+
+### Added
+
+- Two new growable wordlist sources alongside the core vocabulary
+  (candidates researched from public sources — Wikipedia's Cambodian-name
+  article, Behind the Name, Khmer Wiktionary and Khmer media — and curated
+  entry by entry, spellings cross-checked):
+  - `names.txt` (200 entries): Khmer surnames, given names, and honorific
+    titles (ឯកឧត្តម, សម្តេច, …).
+  - `modern.txt` (30 entries): slang (ឡូយ, ស្ទាវ), informal register,
+    tech/media loanwords (ហ្វេសប៊ុក, អនឡាញ), and everyday modern loanwords.
+- `load_lexicon(*sources)` public API: merge any combination of `words`,
+  `names`, `modern` (cached, per-file validation, cross-file duplicates
+  merged); `WORD_SOURCES` lists the available sources.
+- `--include names,modern` flag on `khmerthings count` and
+  `khmerthings segment` to match against the extra wordlists.
+
+### Changed
+
+- Data policy clarified: web research to find/verify candidate entries is
+  allowed; bulk-importing third-party wordlists remains forbidden. Sources
+  are noted in each data file header.
+- Total curated entries: 802 across the three sources.
+
 ## [0.3.0] - 2026-07-03
 
 ### Added
@@ -67,7 +92,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (lint, Python 3.11–3.14 test matrix, build + wheel smoke test), MIT
   license, AGENTS.md/CLAUDE.md, DEVELOPMENT_GUIDE.md, PR template.
 
-[Unreleased]: https://github.com/spkskx/khmerthings/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/spkskx/khmerthings/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/spkskx/khmerthings/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/spkskx/khmerthings/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/spkskx/khmerthings/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/spkskx/khmerthings/releases/tag/v0.1.0
