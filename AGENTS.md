@@ -44,16 +44,20 @@ considering any change done.
 4. `tokenizer.py` — lossless typed tokenization (Khmer words via greedy
    longest-match; unknown Khmer spans become `KHMER_UNKNOWN`, never dropped).
 5. `counter.py` — word counter tool (`count_words`, `analyze`).
-6. `sorting.py` — Khmer dictionary-order line sorting (`sort_lines`,
+6. `segmenter.py` — word breaker tool (`break_words`, `mark_boundaries`),
+   a thin first-class wrapper over `tokenize`; invariant
+   `len(break_words(t)) == count_words(t)`.
+7. `sorting.py` — Khmer dictionary-order line sorting (`sort_lines`,
    `khmer_sort_key`: per-cluster key `(base, coengs, vowels, signs)` —
    naive codepoint order is wrong for subscripts).
-7. `cli.py` — argparse subcommands, one per tool (`khmerthings count ...`,
-   `khmerthings sort ...`).
+8. `cli.py` — argparse subcommands, one per tool (`khmerthings count ...`,
+   `khmerthings segment ...`, `khmerthings sort ...`).
 
-Planned tools (word breaker, spellchecker, POS tagger, intent detector,
-paragraph categorizer) follow the same pattern: new module in
-`src/khmerthings/`, re-export in `__init__.py`, new CLI subcommand in
-`cli.py`, new `tests/test_<module>.py`.
+Planned tools (spellchecker/spellfixer — blocked on lexicon size, POS
+tagger, intent detector, paragraph categorizer) follow the same pattern:
+new module in `src/khmerthings/`, re-export in `__init__.py`, new CLI
+subcommand in `cli.py`, new `tests/test_<module>.py`, and a
+**per-tool document `docs/<tool>.md`** (see below).
 
 ## Invariants to preserve (enforced by tests)
 
@@ -72,9 +76,15 @@ change — not as an afterthought:
 
 - **Self-update this file (AGENTS.md)** when architecture, constraints,
   commands, tools, or conventions change (e.g. a new module or subcommand).
-- **Update the other docs** touched by the change: `README.md` (features,
-  usage examples, CLI), `DEVELOPMENT_GUIDE.md` (workflow, recipes),
-  docstrings.
+- **Every main (end-user) tool has its own `docs/<tool>.md`** written for
+  community users, following the shared template: What it does / Quick
+  start / CLI reference / Python API / How it works / Guarantees &
+  limitations / Related tools. Low-level primitives are documented via
+  docstrings only, not `docs/`. All example outputs in docs must be real —
+  run the command and paste the actual output, never invent it.
+- **Update the other docs** touched by the change: `README.md` (landing
+  page: tool table, roadmap, examples), the affected `docs/*.md`,
+  `DEVELOPMENT_GUIDE.md` (workflow, recipes), docstrings.
 - **Keep `CHANGELOG.md` current**: add an entry under `[Unreleased]` for
   every user-visible change (Keep a Changelog format: Added / Changed /
   Fixed / Removed). On release, rename `[Unreleased]` to the version + date.

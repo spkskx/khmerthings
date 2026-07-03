@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-03
+
+### Added
+
+- Word breaker tool: `khmerthings.segmenter` with `break_words(text)`
+  (words as a list; length always equals `count_words`) and
+  `mark_boundaries(text, separator="​")` (insert separators at Khmer
+  word boundaries, everything else preserved).
+- `khmerthings segment [files|-] [--separator SEP] [--mark]` CLI subcommand.
+- Per-tool community documentation in `docs/`: `word-breaker.md`,
+  `word-counter.md`, `line-sorter.md` — each with quick start, CLI and
+  Python API reference, how-it-works, and guarantees/limitations. All
+  example outputs are real, executed outputs.
+- Lexicon batch 2: +290 hand-curated words (family & occupations, food &
+  drink, verbs, adjectives, connectives, society & learning, time & places);
+  now 582 words.
+
+### Changed
+
+- `README.md` restructured as a community landing page: tool table linking
+  to per-tool docs, roadmap (spellchecker/spellfixer next, pending lexicon
+  coverage), contributing pointers.
+- Doc-upkeep rules in `AGENTS.md`/`DEVELOPMENT_GUIDE.md`/PR template now
+  require a `docs/<tool>.md` for every main tool, with verified outputs.
+
 ## [0.2.0] - 2026-07-03
 
 ### Added
@@ -42,6 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (lint, Python 3.11–3.14 test matrix, build + wheel smoke test), MIT
   license, AGENTS.md/CLAUDE.md, DEVELOPMENT_GUIDE.md, PR template.
 
-[Unreleased]: https://github.com/spkskx/khmerthings/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/spkskx/khmerthings/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/spkskx/khmerthings/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/spkskx/khmerthings/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/spkskx/khmerthings/releases/tag/v0.1.0

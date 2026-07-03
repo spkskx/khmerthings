@@ -13,6 +13,7 @@ from collections.abc import Sequence
 
 from khmerthings import __version__
 from khmerthings.counter import analyze
+from khmerthings.segmenter import break_words, mark_boundaries
 from khmerthings.sorting import sort_lines
 
 __all__ = ["main"]
@@ -45,6 +46,22 @@ def _cmd_count(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_segment(args: argparse.Namespace) -> int:
+    paths: list[str] = args.files or ["-"]
+    if args.mark:
+        separator = args.separator if args.separator is not None else "​"
+    else:
+        separator = args.separator if args.separator is not None else " "
+    for path in paths:
+        _, text = _read_source(path)
+        for line in text.splitlines():
+            if args.mark:
+                print(mark_boundaries(line, separator))
+            else:
+                print(separator.join(break_words(line)))
+    return 0
+
+
 def _cmd_sort(args: argparse.Namespace) -> int:
     paths: list[str] = args.files or ["-"]
     lines: list[str] = []
@@ -68,6 +85,21 @@ def _build_parser() -> argparse.ArgumentParser:
     count.add_argument("files", nargs="*", help="input files, or '-' for stdin (default)")
     count.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     count.set_defaults(func=_cmd_count)
+
+    segment = subparsers.add_parser(
+        "segment", help="break Khmer text into words (word segmentation)"
+    )
+    segment.add_argument("files", nargs="*", help="input files, or '-' for stdin (default)")
+    segment.add_argument(
+        "--separator",
+        help="word separator (default: space, or ZWSP with --mark)",
+    )
+    segment.add_argument(
+        "--mark",
+        action="store_true",
+        help="preserve the line as-is and only insert separators at Khmer word boundaries",
+    )
+    segment.set_defaults(func=_cmd_segment)
 
     sort = subparsers.add_parser(
         "sort", help="sort lines in Khmer dictionary order (ascending by default)"

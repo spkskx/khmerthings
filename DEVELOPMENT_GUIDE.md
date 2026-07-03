@@ -61,7 +61,11 @@ tokenizer → tools). To add a tool, e.g. a spellchecker:
 2. Re-export the public API in `src/khmerthings/__init__.py` (`__all__`).
 3. Add a CLI subcommand in `src/khmerthings/cli.py` (`khmerthings spellcheck`).
 4. Add `tests/test_spellcheck.py` with unit + invariant tests.
-5. Document it in `README.md` and `AGENTS.md`.
+5. Write its per-tool document `docs/spellcheck.md` following the shared
+   template used by the existing docs (What it does / Quick start / CLI
+   reference / Python API / How it works / Guarantees & limitations /
+   Related tools). All example outputs must be real, verified outputs.
+6. Add it to the tool table and roadmap in `README.md`, and to `AGENTS.md`.
 
 ## Editing the lexicon (`words.txt`)
 

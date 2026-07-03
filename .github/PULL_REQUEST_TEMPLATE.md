@@ -24,3 +24,5 @@
 - [ ] `CHANGELOG.md` updated under `[Unreleased]` (any user-visible change)
 - [ ] Affected docs updated (`README.md`, `AGENTS.md`,
       `DEVELOPMENT_GUIDE.md`, docstrings)
+- [ ] Tool changes: per-tool doc in `docs/<tool>.md` added/updated, with
+      real (executed) example outputs

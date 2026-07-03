@@ -51,6 +51,36 @@ class TestMain:
         assert f"{a}:" in out
         assert f"{b}:" in out
 
+    def test_segment_file(self, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+        f = tmp_path / "text.txt"
+        f.write_text("ខ្ញុំស្រឡាញ់ភាសាខ្មែរ\n", encoding="utf-8")
+        assert main(["segment", str(f)]) == 0
+        assert capsys.readouterr().out == "ខ្ញុំ ស្រឡាញ់ ភាសា ខ្មែរ\n"
+
+    def test_segment_custom_separator(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        f = tmp_path / "text.txt"
+        f.write_text("ខ្ញុំទៅផ្សារ\n", encoding="utf-8")
+        assert main(["segment", "--separator", "|", str(f)]) == 0
+        assert capsys.readouterr().out == "ខ្ញុំ|ទៅ|ផ្សារ\n"
+
+    def test_segment_mark_mode_defaults_to_zwsp(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        f = tmp_path / "text.txt"
+        f.write_text("ខ្ញុំទៅ ផ្សារ។\n", encoding="utf-8")
+        assert main(["segment", "--mark", str(f)]) == 0
+        assert capsys.readouterr().out == "ខ្ញុំ​ទៅ ផ្សារ។\n"
+
+    def test_segment_mark_mode_custom_separator(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        f = tmp_path / "text.txt"
+        f.write_text("ខ្ញុំទៅផ្សារ\n", encoding="utf-8")
+        assert main(["segment", "--mark", "--separator", "/", str(f)]) == 0
+        assert capsys.readouterr().out == "ខ្ញុំ/ទៅ/ផ្សារ\n"
+
     def test_sort_file(self, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
         f = tmp_path / "lines.txt"
         f.write_text("ខ\nក\nគ\n", encoding="utf-8")
@@ -101,6 +131,17 @@ class TestSubprocess:
         )
         assert proc.returncode == 0
         assert "total_words: 2" in proc.stdout
+
+    def test_segment_stdin(self) -> None:
+        proc = subprocess.run(
+            [sys.executable, "-m", "khmerthings", "segment", "-"],
+            input="ខ្ញុំស្រឡាញ់ភាសាខ្មែរ\n",
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+        assert proc.returncode == 0
+        assert proc.stdout == "ខ្ញុំ ស្រឡាញ់ ភាសា ខ្មែរ\n"
 
     def test_sort_stdin(self) -> None:
         proc = subprocess.run(
