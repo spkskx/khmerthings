@@ -43,8 +43,12 @@ considering any change done.
    `longest_match` is the segmentation primitive.
 4. `tokenizer.py` — lossless typed tokenization (Khmer words via greedy
    longest-match; unknown Khmer spans become `KHMER_UNKNOWN`, never dropped).
-5. `counter.py` — first end-user tool (`count_words`, `analyze`).
-6. `cli.py` — argparse subcommands, one per tool (`khmerthings count ...`).
+5. `counter.py` — word counter tool (`count_words`, `analyze`).
+6. `sorting.py` — Khmer dictionary-order line sorting (`sort_lines`,
+   `khmer_sort_key`: per-cluster key `(base, coengs, vowels, signs)` —
+   naive codepoint order is wrong for subscripts).
+7. `cli.py` — argparse subcommands, one per tool (`khmerthings count ...`,
+   `khmerthings sort ...`).
 
 Planned tools (word breaker, spellchecker, POS tagger, intent detector,
 paragraph categorizer) follow the same pattern: new module in
@@ -60,6 +64,30 @@ paragraph categorizer) follow the same pattern: new module in
 - All text is NFC-normalized at entry points; lexicon entries must be NFC,
   Khmer-letters-only, and unique (loader raises otherwise).
 - A lexicon match can never split a character cluster.
+
+## Documentation upkeep (do this every change)
+
+Docs must always reflect the current state of the code. As part of any
+change — not as an afterthought:
+
+- **Self-update this file (AGENTS.md)** when architecture, constraints,
+  commands, tools, or conventions change (e.g. a new module or subcommand).
+- **Update the other docs** touched by the change: `README.md` (features,
+  usage examples, CLI), `DEVELOPMENT_GUIDE.md` (workflow, recipes),
+  docstrings.
+- **Keep `CHANGELOG.md` current**: add an entry under `[Unreleased]` for
+  every user-visible change (Keep a Changelog format: Added / Changed /
+  Fixed / Removed). On release, rename `[Unreleased]` to the version + date.
+- A PR that changes behavior but touches no docs/changelog is incomplete —
+  the PR template checklist enforces this.
+
+## Releasing
+
+1. Bump `version` in `pyproject.toml` **and** `__version__` in
+   `src/khmerthings/__init__.py` (they must stay in sync).
+2. Turn the `[Unreleased]` section of `CHANGELOG.md` into `[X.Y.Z] - date`.
+3. `uv sync` (refresh lockfile), run all four checks, commit.
+4. `git tag vX.Y.Z && git push origin main --tags`.
 
 ## Conventions
 

@@ -85,10 +85,20 @@ tokenizer → tools). To add a tool, e.g. a spellchecker:
 - The zero-width space (U+200B) is used in real Khmer text as an explicit
   word delimiter; the tokenizer treats it as whitespace.
 
+## Documentation & changelog
+
+Docs are part of every change, not a follow-up: update `README.md`,
+`AGENTS.md`, `DEVELOPMENT_GUIDE.md`, and docstrings whenever behavior,
+architecture, or workflow changes, and add an entry to the `[Unreleased]`
+section of `CHANGELOG.md` (Keep a Changelog format) for every user-visible
+change. A behavior-changing PR with no docs/changelog update is incomplete.
+
 ## Releasing
 
 1. Bump `version` in `pyproject.toml` and `__version__` in
    `src/khmerthings/__init__.py` (keep them in sync).
-2. Update the lockfile: `uv sync`.
-3. Commit, then tag: `git tag vX.Y.Z && git push origin main --tags`.
-4. Build artifacts with `uv build` (CI also builds and uploads them).
+2. Rename the `[Unreleased]` section of `CHANGELOG.md` to `[X.Y.Z] - date`
+   and update the compare links at the bottom.
+3. Update the lockfile: `uv sync`.
+4. Commit, then tag: `git tag vX.Y.Z && git push origin main --tags`.
+5. Build artifacts with `uv build` (CI also builds and uploads them).

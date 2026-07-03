@@ -14,6 +14,8 @@ real segmentation. khmerthings builds that from first principles:
 - **Tokenizer** (`khmerthings.tokenizer`) — lossless, typed tokenization of mixed
   Khmer/Latin text.
 - **Word counter** (`khmerthings.counter`) — the first end-user tool.
+- **Line sorter** (`khmerthings.sorting`) — sorts lines in Khmer dictionary
+  order (naive codepoint sorting gets subscript consonants wrong).
 
 More tools (word breaker, spellchecker, POS tagger, …) will build on the same
 primitives.
@@ -39,6 +41,11 @@ stats.latin_words        # 2
 stats.numbers            # 2
 
 segment_clusters("ខ្ញុំស្រឡាញ់")   # ['ខ្ញុំ', 'ស្រ', 'ឡា', 'ញ់']
+
+from khmerthings import sort_lines, khmer_sort_key
+sort_lines(["ក្រ", "កា", "កក"])              # ['កក', 'កា', 'ក្រ'] — dictionary order
+sort_lines(["ខ", "ក"], descending=True)      # ['ខ', 'ក']
+sorted(words, key=khmer_sort_key)             # use the collation key directly
 ```
 
 ## CLI usage
@@ -47,6 +54,8 @@ segment_clusters("ខ្ញុំស្រឡាញ់")   # ['ខ្ញុំ',
 khmerthings count file.txt
 echo "ខ្ញុំស្រឡាញ់ភាសាខ្មែរ" | khmerthings count
 khmerthings count --json file.txt
+khmerthings sort file.txt           # sort lines in Khmer dictionary order
+khmerthings sort --desc file.txt    # descending
 ```
 
 ## Design principles

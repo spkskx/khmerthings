@@ -13,6 +13,7 @@ from collections.abc import Sequence
 
 from khmerthings import __version__
 from khmerthings.counter import analyze
+from khmerthings.sorting import sort_lines
 
 __all__ = ["main"]
 
@@ -44,6 +45,17 @@ def _cmd_count(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_sort(args: argparse.Namespace) -> int:
+    paths: list[str] = args.files or ["-"]
+    lines: list[str] = []
+    for path in paths:
+        _, text = _read_source(path)
+        lines.extend(text.splitlines())
+    for line in sort_lines(lines, descending=args.desc):
+        print(line)
+    return 0
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="khmerthings",
@@ -56,6 +68,13 @@ def _build_parser() -> argparse.ArgumentParser:
     count.add_argument("files", nargs="*", help="input files, or '-' for stdin (default)")
     count.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     count.set_defaults(func=_cmd_count)
+
+    sort = subparsers.add_parser(
+        "sort", help="sort lines in Khmer dictionary order (ascending by default)"
+    )
+    sort.add_argument("files", nargs="*", help="input files, or '-' for stdin (default)")
+    sort.add_argument("--desc", action="store_true", help="sort in descending order")
+    sort.set_defaults(func=_cmd_sort)
 
     return parser
 

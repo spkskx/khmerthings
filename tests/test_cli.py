@@ -51,6 +51,28 @@ class TestMain:
         assert f"{a}:" in out
         assert f"{b}:" in out
 
+    def test_sort_file(self, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+        f = tmp_path / "lines.txt"
+        f.write_text("ខ\nក\nគ\n", encoding="utf-8")
+        assert main(["sort", str(f)]) == 0
+        assert capsys.readouterr().out == "ក\nខ\nគ\n"
+
+    def test_sort_descending(self, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+        f = tmp_path / "lines.txt"
+        f.write_text("ក\nគ\nខ\n", encoding="utf-8")
+        assert main(["sort", "--desc", str(f)]) == 0
+        assert capsys.readouterr().out == "គ\nខ\nក\n"
+
+    def test_sort_merges_multiple_files(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        a = tmp_path / "a.txt"
+        b = tmp_path / "b.txt"
+        a.write_text("គ\nក\n", encoding="utf-8")
+        b.write_text("ខ\n", encoding="utf-8")
+        assert main(["sort", str(a), str(b)]) == 0
+        assert capsys.readouterr().out == "ក\nខ\nគ\n"
+
     def test_missing_subcommand_errors(self) -> None:
         with pytest.raises(SystemExit) as exc:
             main([])
@@ -79,6 +101,17 @@ class TestSubprocess:
         )
         assert proc.returncode == 0
         assert "total_words: 2" in proc.stdout
+
+    def test_sort_stdin(self) -> None:
+        proc = subprocess.run(
+            [sys.executable, "-m", "khmerthings", "sort", "-"],
+            input="ខ្ញុំ\nកា\nក្រ\n",
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+        assert proc.returncode == 0
+        assert proc.stdout == "កា\nក្រ\nខ្ញុំ\n"
 
     def test_version(self) -> None:
         proc = subprocess.run(

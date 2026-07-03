@@ -21,3 +21,6 @@
       variants where applicable
 - [ ] Public API changes re-exported in `__init__.py` and documented in
       `README.md` / `AGENTS.md`
+- [ ] `CHANGELOG.md` updated under `[Unreleased]` (any user-visible change)
+- [ ] Affected docs updated (`README.md`, `AGENTS.md`,
+      `DEVELOPMENT_GUIDE.md`, docstrings)
