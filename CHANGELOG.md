@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-07-03
+
+### Added
+
+- GitHub Actions publish workflow: pushing a `vX.Y.Z` tag now runs the full
+  checks, verifies the tag matches the package version, builds, smoke-tests
+  the wheel, and uploads to PyPI (requires the `PYPI_API_TOKEN` secret).
+
 ## [0.4.2] - 2026-07-03
 
 ### Added

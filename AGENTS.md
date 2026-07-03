@@ -110,6 +110,10 @@ change — not as an afterthought:
 2. Turn the `[Unreleased]` section of `CHANGELOG.md` into `[X.Y.Z] - date`.
 3. `uv sync` (refresh lockfile), run all four checks, commit.
 4. `git tag vX.Y.Z && git push origin main --tags`.
+5. The tag push triggers `.github/workflows/publish.yml`, which re-runs the
+   checks, verifies the tag matches `pyproject.toml`, builds, smoke-tests the
+   wheel, and publishes to PyPI (needs the `PYPI_API_TOKEN` repo secret,
+   configured in repo settings).
 
 ## Conventions
 
