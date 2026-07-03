@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-07-03
+
+### Added
+
+- Lexicon: ខ្សោយ (weak) — reported missing via
+  `khmerthings count` showing it as an unknown span.
+
 ## [0.4.1] - 2026-07-03
 
 ### Changed
@@ -107,7 +114,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (lint, Python 3.11–3.14 test matrix, build + wheel smoke test), MIT
   license, AGENTS.md/CLAUDE.md, DEVELOPMENT_GUIDE.md, PR template.
 
-[Unreleased]: https://github.com/spkskx/khmerthings/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/spkskx/khmerthings/compare/v0.4.2...HEAD
+[0.4.2]: https://github.com/spkskx/khmerthings/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/spkskx/khmerthings/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/spkskx/khmerthings/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/spkskx/khmerthings/compare/v0.2.0...v0.3.0
