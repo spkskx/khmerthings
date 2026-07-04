@@ -9,12 +9,13 @@ from khmerthings.lexicon import (
     load_lexicon,
     load_variants,
 )
+from khmerthings.normalize import normalize_text
 from khmerthings.segmenter import break_words, mark_boundaries
 from khmerthings.sorting import khmer_sort_key, sort_lines
 from khmerthings.spellcheck import IssueKind, SpellIssue, check_spelling, fix_spelling
 from khmerthings.tokenizer import Token, TokenType, tokenize
 
-__version__ = "0.7.0"
+__version__ = "0.8.0"
 
 __all__ = [
     "WORD_SOURCES",
@@ -35,6 +36,7 @@ __all__ = [
     "load_lexicon",
     "load_variants",
     "mark_boundaries",
+    "normalize_text",
     "segment_clusters",
     "sort_lines",
     "tokenize",

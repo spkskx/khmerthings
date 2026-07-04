@@ -90,6 +90,11 @@ def is_khmer_punctuation(ch: str) -> bool:
     return _codepoint(ch) in _PUNCTUATION
 
 
+def is_khmer_sentence_stop(ch: str) -> bool:
+    """True for ។ (khan, U+17D4) and ៕ (bariyoosan, U+17D5) — Khmer full stops."""
+    return _codepoint(ch) in (0x17D4, 0x17D5)
+
+
 def is_khmer_letter_or_mark(ch: str) -> bool:
     """True if *ch* can be part of a Khmer word (letters and combining marks)."""
     return (

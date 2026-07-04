@@ -22,6 +22,7 @@ its own detailed document:
 | **Line sorter** — Khmer dictionary-order sorting | `khmerthings sort` | `sort_lines`, `khmer_sort_key` | [docs/line-sorter.md](docs/line-sorter.md) |
 | **Spellchecker** — find Khmer misspellings & unknown words | `khmerthings spellcheck` | `check_spelling` | [docs/spellcheck.md](docs/spellcheck.md) |
 | **Spellfixer** — rewrite known misspellings to canonical | `khmerthings spellfix` | `fix_spelling` | [docs/spellfix.md](docs/spellfix.md) |
+| **Normalizer** — spellfix + re-space into clean, ready-to-use text | `khmerthings normalize` | `normalize_text` | [docs/normalize.md](docs/normalize.md) |
 
 ## Install
 
@@ -68,7 +69,8 @@ docstrings if you want to build on them directly.
 
 ## Roadmap
 
-- ✅ Word counter, line sorter, word breaker, spellchecker & spellfixer
+- ✅ Word counter, line sorter, word breaker, spellchecker & spellfixer,
+  normalizer
 - ⏳ Wordlist growth across all four sources (`words`, `names`, `modern`,
   `variants`) — hand-curated batches each release; the accuracy lever for
   every dictionary-based tool, including the spellchecker's verdicts,

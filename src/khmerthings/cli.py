@@ -14,6 +14,7 @@ from collections.abc import Sequence
 from khmerthings import __version__
 from khmerthings.counter import analyze
 from khmerthings.lexicon import WORD_SOURCES, Lexicon, load_lexicon
+from khmerthings.normalize import normalize_text
 from khmerthings.segmenter import break_words, mark_boundaries
 from khmerthings.sorting import sort_lines
 from khmerthings.spellcheck import check_spelling, fix_spelling
@@ -135,6 +136,16 @@ def _cmd_spellfix(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_normalize(args: argparse.Namespace) -> int:
+    paths: list[str] = args.files or ["-"]
+    lexicon = _lexicon_from_args(args)
+    for path in paths:
+        _, text = _read_source(path)
+        for line in text.splitlines():
+            print(normalize_text(line, lexicon))
+    return 0
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="khmerthings",
@@ -186,6 +197,13 @@ def _build_parser() -> argparse.ArgumentParser:
     spellfix.add_argument("files", nargs="*", help="input files, or '-' for stdin (default)")
     _add_include_option(spellfix)
     spellfix.set_defaults(func=_cmd_spellfix)
+
+    normalize = subparsers.add_parser(
+        "normalize", help="spellfix and re-space text into clean, ready-to-use form"
+    )
+    normalize.add_argument("files", nargs="*", help="input files, or '-' for stdin (default)")
+    _add_include_option(normalize)
+    normalize.set_defaults(func=_cmd_normalize)
 
     sort = subparsers.add_parser(
         "sort", help="sort lines in Khmer dictionary order (ascending by default)"

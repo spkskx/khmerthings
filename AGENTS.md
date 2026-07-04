@@ -68,12 +68,20 @@ considering any change done.
    suggestion, UNKNOWN = unmatched Khmer span with suggestions by
    cluster-level edit distance ranked by `(distance, khmer_sort_key)`;
    `fix_spelling` rewrites VARIANT spans only, never UNKNOWN). Tokenizes
-   against the caller's lexicon unioned with the variants keys; a spelling
-   present in the caller's lexicon is never flagged.
-9. `cli.py` — argparse subcommands, one per tool (`khmerthings count ...`,
-   `khmerthings segment ...`, `khmerthings sort ...`,
-   `khmerthings spellcheck ...` (exit 1 = issues found),
-   `khmerthings spellfix ...`).
+   against the caller's lexicon unioned with the variants keys (the
+   lexicon+variants union builder, `_checking_lexicon`, lives in
+   `lexicon.py` and is shared with `normalize.py`); a spelling present in
+   the caller's lexicon is never flagged.
+9. `normalize.py` — text normalizer (`normalize_text`): reuses
+   `spellcheck`'s variant-fix rule plus segmentation-aware spacing —
+   hidden zero-width space at bare Khmer word boundaries (same rule as
+   `mark_boundaries`), collapsed/trimmed whitespace elsewhere, and Khmer
+   sentence-stop spacing (no space before ។/៕, one space after, via the
+   `chars.is_khmer_sentence_stop` primitive). Idempotent.
+10. `cli.py` — argparse subcommands, one per tool (`khmerthings count ...`,
+    `khmerthings segment ...`, `khmerthings sort ...`,
+    `khmerthings spellcheck ...` (exit 1 = issues found),
+    `khmerthings spellfix ...`, `khmerthings normalize ...`).
 
 Planned tools (POS tagger, intent detector, paragraph categorizer) follow
 the same pattern:

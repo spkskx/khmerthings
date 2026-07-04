@@ -78,6 +78,16 @@ class TestPunctuation:
         assert not chars.is_khmer_punctuation(ch)
 
 
+class TestSentenceStop:
+    @pytest.mark.parametrize("ch", ["។", "៕"])
+    def test_sentence_stops(self, ch: str) -> None:
+        assert chars.is_khmer_sentence_stop(ch)
+
+    @pytest.mark.parametrize("ch", ["៖", "ៗ", "ៜ", "ក", ".", "!", "១"])
+    def test_non_sentence_stops(self, ch: str) -> None:
+        assert not chars.is_khmer_sentence_stop(ch)
+
+
 class TestBlockBoundaries:
     @pytest.mark.parametrize(
         ("ch", "expected"),

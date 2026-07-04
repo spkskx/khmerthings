@@ -185,3 +185,13 @@ def parse_variants(lines: Iterable[str]) -> dict[str, str]:
 def default_lexicon() -> Lexicon:
     """The built-in core lexicon (the ``"words"`` source)."""
     return load_lexicon("words")
+
+
+@cache
+def _checking_lexicon(lexicon: Lexicon) -> Lexicon:
+    """*lexicon* plus the variant misspellings, so they tokenize as words.
+
+    Shared by :mod:`khmerthings.spellcheck` and :mod:`khmerthings.normalize`,
+    which both need known misspellings to surface as single tokens.
+    """
+    return Lexicon(set(lexicon) | set(load_variants()))

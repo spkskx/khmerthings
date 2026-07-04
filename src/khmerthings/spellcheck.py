@@ -22,7 +22,7 @@ from enum import Enum
 from functools import cache
 
 from khmerthings.clusters import segment_clusters
-from khmerthings.lexicon import Lexicon, default_lexicon, load_variants
+from khmerthings.lexicon import Lexicon, _checking_lexicon, default_lexicon, load_variants
 from khmerthings.sorting import SortKey, khmer_sort_key
 from khmerthings.tokenizer import TokenType, tokenize
 
@@ -48,12 +48,6 @@ class SpellIssue:
     start: int
     end: int
     suggestions: tuple[str, ...]
-
-
-@cache
-def _checking_lexicon(lexicon: Lexicon) -> Lexicon:
-    """*lexicon* plus the variant misspellings, so they tokenize as words."""
-    return Lexicon(set(lexicon) | set(load_variants()))
 
 
 @cache

@@ -5,6 +5,20 @@ All notable changes to khmerthings are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2026-07-04
+
+### Added
+
+- Normalizer tool (`normalize.py`): `normalize_text()` combines the
+  spellfixer's variant corrections with segmentation-aware spacing —
+  inserting a hidden zero-width space at bare Khmer word boundaries (same
+  rule as `mark_boundaries`), collapsing/trimming ordinary whitespace, and
+  tidying spacing around Khmer sentence stops (។, ៕: no space before, one
+  space after) — into a single, idempotent, deterministic pass. New CLI
+  subcommand `khmerthings normalize` (files/stdin, `--include`, same
+  conventions as the other tools). Documented in `docs/normalize.md`.
+- New `chars.is_khmer_sentence_stop()` primitive (។ khan, ៕ bariyoosan).
+
 ## [0.7.0] - 2026-07-04
 
 ### Added
