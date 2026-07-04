@@ -79,10 +79,13 @@ docstrings if you want to build on them directly.
 
 ## Contributing
 
-See [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md) for setup, the
-architecture, the rules (determinism, self-owned data, tests first), and
-how to add words to the lexicon — the single most valuable contribution.
-Changes are tracked in [CHANGELOG.md](CHANGELOG.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md) and
+[DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md) for setup, the architecture,
+the rules (determinism, self-owned data, tests first), and how to add
+words to the lexicon — the single most valuable contribution. This project
+follows a [Code of Conduct](CODE_OF_CONDUCT.md). Changes are tracked in
+[CHANGELOG.md](CHANGELOG.md). Report security issues per
+[SECURITY.md](SECURITY.md) rather than in a public issue.
 
 ## License
 

@@ -5,6 +5,14 @@ All notable changes to khmerthings are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Community health files: `CODE_OF_CONDUCT.md`, `CONTRIBUTING.md`,
+  `SECURITY.md`, and GitHub issue templates (bug report, feature request,
+  wordlist addition) under `.github/ISSUE_TEMPLATE/`.
+
 ## [0.8.0] - 2026-07-04
 
 ### Added
