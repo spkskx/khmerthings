@@ -116,3 +116,18 @@ class TestInvariants:
     @pytest.mark.parametrize("text", SAMPLE_TEXTS)
     def test_deterministic(self, text: str) -> None:
         assert tokenize(text) == tokenize(text)
+
+
+class TestVariantsSource:
+    def test_variant_matches_only_when_included(self) -> None:
+        from khmerthings.lexicon import load_lexicon
+
+        text = "ព័ត៍មាន"  # common misspelling of ព័ត៌មាន
+        with_variants = tokenize(text, load_lexicon("words", "variants"))
+        assert [t.type for t in with_variants] == [TokenType.KHMER_WORD]
+        without = tokenize(text, load_lexicon("words"))
+        assert TokenType.KHMER_UNKNOWN in {t.type for t in without}
+        # lossless either way
+        normalized = unicodedata.normalize("NFC", text)
+        assert "".join(t.text for t in with_variants) == normalized
+        assert "".join(t.text for t in without) == normalized

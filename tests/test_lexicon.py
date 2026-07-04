@@ -2,7 +2,14 @@ import pytest
 
 from khmerthings.clusters import segment_clusters
 from khmerthings.clusters import segment_clusters as segment_clusters_for_match
-from khmerthings.lexicon import WORD_SOURCES, Lexicon, default_lexicon, load_lexicon
+from khmerthings.lexicon import (
+    WORD_SOURCES,
+    Lexicon,
+    default_lexicon,
+    load_lexicon,
+    load_variants,
+    parse_variants,
+)
 
 
 class TestConstruction:
@@ -133,3 +140,58 @@ class TestLoadLexicon:
     def test_unknown_source_raises(self) -> None:
         with pytest.raises(ValueError, match="unknown word source"):
             load_lexicon("words", "nope")
+
+
+class TestParseVariants:
+    def test_basic_mapping(self) -> None:
+        mapping = parse_variants(["# comment", "", "ព័ត៍មាន\tព័ត៌មាន", "  អោយ\tឱ្យ  "])
+        assert mapping == {"ព័ត៍មាន": "ព័ត៌មាន", "អោយ": "ឱ្យ"}
+
+    @pytest.mark.parametrize(
+        ("line", "match"),
+        [
+            ("ព័ត៍មាន", "malformed"),  # no tab
+            ("ព័ត៍មាន\t", "malformed"),  # empty canonical
+            ("\tព័ត៌មាន", "malformed"),  # empty variant
+            ("hello\tព័ត៌មាន", "non-Khmer"),
+            ("ព័ត៍មាន\tnews", "non-Khmer"),
+            ("ព័ត៌មាន\tព័ត៌មាន", "maps to itself"),
+        ],
+    )
+    def test_bad_lines_rejected(self, line: str, match: str) -> None:
+        with pytest.raises(ValueError, match=match):
+            parse_variants([line])
+
+    def test_duplicate_variant_rejected(self) -> None:
+        with pytest.raises(ValueError, match="duplicate variant"):
+            parse_variants(["អោយ\tឱ្យ", "អោយ\tឲ្យ"])
+
+    def test_chained_variant_rejected(self) -> None:
+        # a canonical target may not itself be listed as a variant
+        with pytest.raises(ValueError, match="itself listed as a variant"):
+            parse_variants(["ពត៌មាន\tព័ត៍មាន", "ព័ត៍មាន\tព័ត៌មាន"])
+
+
+class TestLoadVariants:
+    def test_loads_and_is_cached(self) -> None:
+        variants = load_variants()
+        assert variants is load_variants()
+        assert variants["ព័ត៍មាន"] == "ព័ត៌មាន"
+        assert variants["អោយ"] == "ឱ្យ"
+
+    def test_every_canonical_is_a_canonical_entry(self) -> None:
+        merged = load_lexicon("words", "names", "modern")
+        for variant, canonical in load_variants().items():
+            assert canonical in merged, f"{variant!r} -> {canonical!r} not in canonical sources"
+
+    def test_no_variant_is_a_canonical_entry(self) -> None:
+        # a spelling cannot be both a misspelling and a real word/name
+        merged = load_lexicon("words", "names", "modern")
+        for variant in load_variants():
+            assert variant not in merged, f"{variant!r} is both variant and canonical"
+
+    def test_variants_source_contributes_misspellings(self) -> None:
+        lex = load_lexicon("words", "variants")
+        assert "ព័ត៍មាន" in lex  # variant matches
+        assert "ព័ត៌មាន" in lex  # canonical still matches
+        assert "ព័ត៍មាន" not in load_lexicon("words")

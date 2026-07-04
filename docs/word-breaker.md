@@ -35,7 +35,7 @@ break_words("ខ្ញុំស្រឡាញ់ភាសាខ្មែរ")
 ## CLI reference
 
 ```
-khmerthings segment [files ...] [--separator SEP] [--mark] [--include names,modern]
+khmerthings segment [files ...] [--separator SEP] [--mark] [--include modern,names,variants]
 ```
 
 Every option, with a real example of its effect:
@@ -95,11 +95,13 @@ $ echo "ខ្ញុំទៅផ្សារ" | khmerthings segment --mark | gre
 Rule of thumb: use words mode to *extract* words, `--mark` to *annotate*
 text you will keep.
 
-### `--include names,modern` — match extra wordlists
+### `--include modern,names,variants` — match extra wordlists
 
 The core vocabulary is always active; `--include` adds the extra built-in
 wordlists (comma-separated): `names` (personal names, surnames, honorific
-titles) and `modern` (slang, informal register, loanwords, trending terms).
+titles), `modern` (slang, informal register, loanwords, trending terms),
+and `variants` (common misspellings, matched as words so they can be
+found and later corrected).
 
 ```sh
 $ echo "សុខាដារ៉ាឡូយណាស់" | khmerthings segment
@@ -107,6 +109,9 @@ $ echo "សុខាដារ៉ាឡូយណាស់" | khmerthings segment
 
 $ echo "សុខាដារ៉ាឡូយណាស់" | khmerthings segment --include names,modern
 សុខា ដារ៉ា ឡូយ ណាស់
+
+$ echo "ព័ត៍មាន" | khmerthings segment --include variants
+ព័ត៍មាន                            # misspelling of ព័ត៌មាន matches as a word
 ```
 
 ### Exit codes & errors
@@ -174,7 +179,7 @@ Removing every `separator` from the result reproduces the NFC input exactly
 
 ### Choosing wordlists: `load_lexicon(*sources)`
 
-The dictionary ships as three independently growable data files, merged on
+The dictionary ships as four independently growable data files, merged on
 demand. `WORD_SOURCES` lists them:
 
 | Source | Contents |
@@ -182,19 +187,23 @@ demand. `WORD_SOURCES` lists them:
 | `words` | core vocabulary (the default) |
 | `names` | personal names, surnames, honorific titles |
 | `modern` | slang, informal register, loanwords, trending vocabulary |
+| `variants` | common misspellings (the keys of `load_variants()`) |
 
 ```python
-from khmerthings import WORD_SOURCES, load_lexicon, break_words
+from khmerthings import WORD_SOURCES, load_lexicon, load_variants, break_words
 
 sorted(WORD_SOURCES)
-# ['modern', 'names', 'words']
+# ['modern', 'names', 'variants', 'words']
 
 lex = load_lexicon("words", "names", "modern")   # cached; any combination
 break_words("ឯកឧត្តមទៅសៀមរាប", lex)
 # ['ឯកឧត្តម', 'ទៅ', 'សៀមរាប']
 
 load_lexicon("nope")
-# ValueError: unknown word source 'nope'; available: ['modern', 'names', 'words']
+# ValueError: unknown word source 'nope'; available: ['modern', 'names', 'variants', 'words']
+
+load_variants()["ព័ត៍មាន"]   # misspelling → canonical spelling
+# 'ព័ត៌មាន'
 ```
 
 Or build a fully custom dictionary: `Lexicon(iterable_of_khmer_words)` /
@@ -229,8 +238,9 @@ losslessly.
 - **Lossless.** No character is ever dropped or reordered; `--mark` output
   minus the separators is exactly the NFC input.
 - **Accuracy scales with the dictionary.** The built-in wordlists are
-  hand-curated and growing (802 entries across `words`/`names`/`modern` as
-  of v0.4.0). Words not in them come back as unsegmented unknown spans
+  hand-curated and growing (1,895 entries across `words`/`names`/`modern`,
+  plus a `variants` source of common misspellings). Words not in them come
+  back as unsegmented unknown spans
   rather than being split incorrectly. Greedy longest-match can also
   occasionally over-match compounds. If segmentation quality matters for
   your use case, supply a larger `Lexicon` — or contribute words upstream

@@ -71,17 +71,23 @@ tokenizer → tools). To add a tool, e.g. a spellchecker:
 
 ## Editing the wordlists (`src/khmerthings/data/`)
 
-Three growable files, merged on demand via `load_lexicon(*sources)`:
+Four growable files, merged on demand via `load_lexicon(*sources)`:
 
 | File | Source name | Contents |
 |---|---|---|
 | `words.txt` | `words` | core vocabulary (always loaded) |
 | `names.txt` | `names` | personal names, surnames, honorific titles |
 | `modern.txt` | `modern` | slang, informal register, loanwords, trending terms |
+| `variants.txt` | `variants` | common misspellings → canonical spelling (two columns) |
 
 Put new entries in the right file: standard dictionary vocabulary → `words`;
 anything people are called → `names`; register that shifts with time
-(slang, borrowings, internet vocabulary) → `modern`.
+(slang, borrowings, internet vocabulary) → `modern`; clear misspellings and
+deprecated orthography → `variants` (format `misspelling<TAB>canonical`;
+the canonical form must exist in the other files, and a spelling that is a
+legitimate name — e.g. ចំរើន — must not be listed as a variant; both rules
+are enforced by tests). Accepted real-world doubles (subscript ta/da ្ត/្ដ,
+ro-ordering pairs) are *not* variants; list both spellings as canonical.
 
 - One entry per line, UTF-8, NFC-normalized, Khmer letters/marks only —
   the loader rejects anything else (including within-file duplicates) at

@@ -9,11 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- New `variants` wordlist source: common misspellings mapped to their
+  canonical spelling (`variants.txt`, format `misspelling<TAB>canonical`).
+  `load_variants()` returns the mapping (the future spellchecker/spellfixer
+  correction table); `load_lexicon(..., "variants")` and CLI
+  `--include variants` match the misspellings during
+  counting/segmentation. 13 seed mappings (e.g. ព័ត៍មាន→ព័ត៌មាន,
+  អោយ→ឱ្យ, deprecated ំរ spellings like សំរាប់→សម្រាប់). Accepted
+  real-world doubles (្ត/្ដ, ro-ordering) remain canonical, and a spelling
+  that is a legitimate name (ចំរើន) is never listed as a variant — both
+  enforced by tests.
+- Lexicon batch 4: 280 hand-curated general-vocabulary entries in
+  `words.txt` (everyday and craft verbs, household objects, body parts,
+  nature, kinship, feelings, animals, adjectives/adverbs), with ្ត/្ដ
+  doubles where applicable. 1,895 merged canonical entries.
 - 41 lexicon entries fixing greedy-segmentation errors where a short name
   entry shadowed the start of a longer word (e.g. សំបុត្រ, សេរីភាព, គណនី,
   លីត្រ, ប្រមាណ, សមាគម), plus missing function words (ទី, ដ៏, ឱកាស, រីឯ) and
-  common -ដ្ឋាន compounds (មូលដ្ឋាន, ការដ្ឋាន, អាកាសយានដ្ឋាន). 1,622 merged
-  entries.
+  common -ដ្ឋាន compounds (មូលដ្ឋាន, ការដ្ឋាន, អាកាសយានដ្ឋាន).
+
+### Changed
+
+- មិនា and សំអាត moved from `words.txt` to `variants.txt` (canonical
+  spellings: មីនា, សម្អាត).
 
 ## [0.5.0] - 2026-07-04
 

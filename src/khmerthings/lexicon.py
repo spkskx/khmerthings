@@ -15,17 +15,21 @@ from importlib import resources
 from khmerthings.chars import ZERO_WIDTH_SPACE, is_khmer_letter_or_mark
 from khmerthings.clusters import segment_clusters
 
-__all__ = ["WORD_SOURCES", "Lexicon", "default_lexicon", "load_lexicon"]
+__all__ = ["WORD_SOURCES", "Lexicon", "default_lexicon", "load_lexicon", "load_variants"]
 
 #: Built-in wordlist sources shipped with the package. Each is an
 #: independently curated, growable data file under ``khmerthings/data/``:
 #: - "words": core vocabulary (the default)
 #: - "names": personal names, surnames, honorific titles
 #: - "modern": slang, informal register, loanwords, trending vocabulary
+#: - "variants": common misspellings mapped to their canonical spelling
+#:   (two-column file; as a lexicon source it contributes the misspellings,
+#:   see :func:`load_variants` for the mapping itself)
 WORD_SOURCES: dict[str, str] = {
     "words": "words.txt",
     "names": "names.txt",
     "modern": "modern.txt",
+    "variants": "variants.txt",
 }
 
 _END = "\x00"  # trie sentinel; cannot collide with any cluster
@@ -116,9 +120,66 @@ def _load_lexicon_cached(sources: tuple[str, ...]) -> Lexicon:
         filename = WORD_SOURCES.get(source)
         if filename is None:
             raise ValueError(f"unknown word source {source!r}; available: {sorted(WORD_SOURCES)}")
+        if source == "variants":
+            # two-column file; the misspellings are what the lexicon matches
+            merged |= set(load_variants())
+            continue
         text = (resources.files("khmerthings") / "data" / filename).read_text("utf-8")
         merged |= set(Lexicon.from_lines(text.splitlines()))
     return Lexicon(merged)
+
+
+def _check_khmer_nfc(value: str, role: str, line: str) -> None:
+    if unicodedata.normalize("NFC", value) != value:
+        raise ValueError(f"{role} is not NFC-normalized in variants line: {line!r}")
+    if not all(is_khmer_letter_or_mark(ch) for ch in value):
+        raise ValueError(f"{role} contains non-Khmer characters in variants line: {line!r}")
+
+
+@cache
+def load_variants() -> dict[str, str]:
+    """Load the built-in misspelling → canonical-spelling map.
+
+    The ``variants.txt`` data file has one mapping per line as
+    ``misspelling<TAB>canonical``; blank lines and ``#`` comments are
+    ignored. Both columns must be NFC-normalized Khmer text. Duplicate
+    misspellings, identity mappings, and canonicals that are themselves
+    listed as misspellings are load errors. The returned dict is the
+    correction table for spell-fixing; the *keys* double as the
+    ``"variants"`` lexicon source for :func:`load_lexicon`.
+
+    >>> load_variants()["ព័ត៍មាន"]
+    'ព័ត៌មាន'
+    """
+    text = (resources.files("khmerthings") / "data" / WORD_SOURCES["variants"]).read_text("utf-8")
+    return parse_variants(text.splitlines())
+
+
+def parse_variants(lines: Iterable[str]) -> dict[str, str]:
+    """Parse and validate variant-mapping lines (see :func:`load_variants`)."""
+    mapping: dict[str, str] = {}
+    for raw in lines:
+        line = raw.strip().strip(ZERO_WIDTH_SPACE)
+        if not line or line.startswith("#"):
+            continue
+        variant, sep, canonical = line.partition("\t")
+        variant = variant.strip().strip(ZERO_WIDTH_SPACE)
+        canonical = canonical.strip().strip(ZERO_WIDTH_SPACE)
+        if not sep or not variant or not canonical:
+            raise ValueError(f"malformed variants line (want 'variant<TAB>canonical'): {raw!r}")
+        _check_khmer_nfc(variant, "variant", raw)
+        _check_khmer_nfc(canonical, "canonical", raw)
+        if variant == canonical:
+            raise ValueError(f"variant maps to itself: {raw!r}")
+        if variant in mapping:
+            raise ValueError(f"duplicate variant: {variant!r}")
+        mapping[variant] = canonical
+    for variant, canonical in mapping.items():
+        if canonical in mapping:
+            raise ValueError(
+                f"canonical {canonical!r} (for variant {variant!r}) is itself listed as a variant"
+            )
+    return mapping
 
 
 def default_lexicon() -> Lexicon:

@@ -56,7 +56,7 @@ This definition is shared with the [word breaker](word-breaker.md):
 ## CLI reference
 
 ```
-khmerthings count [files ...] [--json] [--include names,modern]
+khmerthings count [files ...] [--json] [--include modern,names,variants]
 ```
 
 Every option, with a real example of its effect:
@@ -113,24 +113,26 @@ $ echo "ខ្ញុំស្រឡាញ់ភាសាខ្មែរ" | khmer
 (`characters` is 22 here because `echo` appends a newline.) Parse with
 `jq`: `khmerthings count --json *.txt | jq 'map(.total_words) | add'`.
 
-### `--include names,modern` — match extra wordlists
+### `--include modern,names,variants` — match extra wordlists
 
 The core vocabulary is always active; `--include` adds the `names`
-(personal names, surnames, titles) and/or `modern` (slang, loanwords)
-wordlists, so such text counts as known words instead of unknown spans:
+(personal names, surnames, titles), `modern` (slang, loanwords), and/or
+`variants` (common misspellings) wordlists, so such text counts as known
+words instead of unknown spans:
 
 ```sh
 $ echo "ហ្វេសប៊ុកឡូយណាស់" | khmerthings count | grep -E "khmer_words|unknown"
-  khmer_words: 2
-  unknown_khmer_words: 2
+  khmer_words: 3
+  unknown_khmer_words: 3
 
 $ echo "ហ្វេសប៊ុកឡូយណាស់" | khmerthings count --include modern | grep -E "khmer_words|unknown"
   khmer_words: 3
   unknown_khmer_words: 0
 ```
 
-(Without `modern`, the counter even mis-finds the core word ស inside the
-loanword ហ្វេសប៊ុក — a concrete example of why the right wordlist matters.)
+(Without `modern`, the counter even mis-finds the core words ស and ក inside
+the loanword ហ្វេសប៊ុក — a concrete example of why the right wordlist
+matters.)
 
 ### Exit codes & errors
 
@@ -224,8 +226,9 @@ dictionary. The counter then tallies the resulting tokens by type.
   several real words, so Khmer word counts on dictionary-poor text are a
   lower bound. The `unknown_khmer_words` field tells you how much of the
   text that caveat applies to.
-- **Accuracy scales with the dictionary** (802 hand-curated entries across
-  the `words`/`names`/`modern` sources as of v0.4.0, growing). Use
+- **Accuracy scales with the dictionary** (1,895 hand-curated entries across
+  the `words`/`names`/`modern` sources and growing, plus a `variants`
+  source of common misspellings). Use
   `--include`/`load_lexicon`, supply your own `Lexicon`, or contribute
   words upstream (see [DEVELOPMENT_GUIDE.md](../DEVELOPMENT_GUIDE.md)).
 

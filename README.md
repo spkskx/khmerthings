@@ -49,9 +49,10 @@ sort_lines(["ក្រ", "កា", "កក"])                    # ['កក', '�
   dictionary-based algorithms only; nothing probabilistic.
 - **Self-contained**: zero runtime dependencies; all word data is our own
   hand-curated set of growable wordlists — `words` (core vocabulary),
-  `names` (people's names & titles), and `modern` (slang, loanwords,
-  trending terms) — 1,622 entries and growing, each verified entry by
-  entry; no wordlist is imported wholesale.
+  `names` (people's names & titles), `modern` (slang, loanwords, trending
+  terms), and `variants` (common misspellings mapped to their canonical
+  spelling) — 1,895 entries and growing, each verified entry by entry; no
+  wordlist is imported wholesale.
 - **Lossless**: no character is ever dropped — unknown Khmer spans are
   reported, not discarded.
 - **Tested first**: every module ships with table-driven unit tests and
@@ -65,11 +66,12 @@ docstrings if you want to build on them directly.
 ## Roadmap
 
 - ✅ Word counter, line sorter, word breaker
-- ⏳ Wordlist growth across all three sources (`words`, `names`, `modern`) —
-  hand-curated batches each release; the accuracy lever for every
-  dictionary-based tool
-- 🔜 Spellchecker & spellfixer (engine is feasible today; waiting on lexicon
-  coverage to make its verdicts trustworthy)
+- ⏳ Wordlist growth across all four sources (`words`, `names`, `modern`,
+  `variants`) — hand-curated batches each release; the accuracy lever for
+  every dictionary-based tool
+- 🔜 Spellchecker & spellfixer (engine is feasible today; the `variants`
+  misspelling→canonical map is its future correction table, and lexicon
+  coverage keeps improving its verdicts)
 - Later: part-of-speech tagger, intent detection, paragraph categorization
 
 ## Contributing

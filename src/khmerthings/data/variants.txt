@@ -1,0 +1,31 @@
+# khmerthings variants lexicon: common misspellings mapped to the canonical
+# spelling. One mapping per line: misspelling<TAB>canonical. UTF-8, NFC,
+# Khmer letters/marks only in both columns. Lines starting with '#' and
+# blank lines are ignored.
+#
+# Reserved for clear errors and deprecated orthography. Accepted real-world
+# doubles (subscript ta/da ្ត/្ដ, ro-ordering pairs like រដ្ឋមន្ត្រី/រដ្ឋមន្រ្តី)
+# are NOT variants — they live in the canonical files in both spellings.
+# Hand-curated entry by entry; each canonical form must exist in the
+# canonical wordlists, and no variant may itself be a canonical entry
+# (enforced by tests) — e.g. ចំរើន is excluded because it is a legitimate
+# spelling of the given name Chamroeun even though ចម្រើន is the standard
+# spelling of the common word.
+#
+# --- diacritic errors ---
+ព័ត៍មាន	ព័ត៌មាន
+ពត៌មាន	ព័ត៌មាន
+# --- consonant confusions ---
+អត្តបទ	អត្ថបទ
+បញ្ចាក់	បញ្ជាក់
+# --- vowel errors ---
+មិនា	មីនា
+អោយ	ឱ្យ
+# --- deprecated ំរ/ំល spellings of ម្រ/ម្ល/ម្អ words ---
+សំរាប់	សម្រាប់
+សំរេច	សម្រេច
+កំរិត	កម្រិត
+សំអាត	សម្អាត
+ចំរុះ	ចម្រុះ
+កំលាំង	កម្លាំង
+សំលេង	សំឡេង

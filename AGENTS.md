@@ -18,8 +18,10 @@ Deterministic Khmer language tools in Python. Note: the repo directory is
   headers, docs, changelog, or commit messages (user decision, 2026-07-04).
   Data files under `src/khmerthings/data/`:
   `words.txt` (core), `names.txt` (names, surnames, titles), `modern.txt`
-  (slang, informal, loanwords, trending). All three are growable and merged
-  via `load_lexicon(*sources)`.
+  (slang, informal, loanwords, trending), `variants.txt` (misspelling→
+  canonical map, two tab-separated columns). All are growable; the word
+  files merge via `load_lexicon(*sources)` and the variants map loads via
+  `load_variants()` (its keys double as the `variants` lexicon source).
 - **Zero runtime dependencies.** Stdlib only. Dev tools (pytest, ruff, mypy)
   are the only allowed dependencies.
 - **Tests are the top priority.** Every module ships with table-driven unit
@@ -47,10 +49,11 @@ considering any change done.
    single-character contract: multi-char input raises `ValueError`).
 2. `clusters.py` — Khmer character-cluster (KCC) segmentation. Cluster
    boundaries are the only legal word boundaries.
-3. `lexicon.py` + `data/*.txt` — wordlists (`words`/`names`/`modern`) +
-   trie keyed by clusters; `longest_match` is the segmentation primitive;
-   `load_lexicon(*sources)` merges sources (cached), `--include` on the
-   CLI exposes the extra ones.
+3. `lexicon.py` + `data/*.txt` — wordlists (`words`/`names`/`modern`/
+   `variants`) + trie keyed by clusters; `longest_match` is the segmentation
+   primitive; `load_lexicon(*sources)` merges sources (cached), `--include`
+   on the CLI exposes the extra ones; `load_variants()` returns the
+   misspelling→canonical map (future spellfixer correction table).
 4. `tokenizer.py` — lossless typed tokenization (Khmer words via greedy
    longest-match; unknown Khmer spans become `KHMER_UNKNOWN`, never dropped).
 5. `counter.py` — word counter tool (`count_words`, `analyze`).
@@ -129,5 +132,10 @@ change — not as an afterthought:
   subscript ta/da (្ត/្ដ) spelling variation are listed in both spellings —
   real-world text mixes them. Within a file duplicates are a load error;
   the same entry in different files is fine (merged at load).
+- `variants.txt`: one `misspelling<TAB>canonical` mapping per line, for
+  clear errors and deprecated orthography only (accepted doubles like ្ត/្ដ
+  stay canonical). Tests enforce that every canonical exists in the word
+  files and that no variant key is itself a canonical entry (so legitimate
+  name spellings such as ចំរើន can never be listed as misspellings).
 - Khmer test strings: verify codepoints carefully (visually identical strings
   can differ, e.g. ្ត vs ្ដ); assert exact expected values, hand-verified.

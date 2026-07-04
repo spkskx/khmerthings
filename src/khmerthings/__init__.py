@@ -2,7 +2,13 @@
 
 from khmerthings.clusters import segment_clusters
 from khmerthings.counter import WordCount, analyze, count_words
-from khmerthings.lexicon import WORD_SOURCES, Lexicon, default_lexicon, load_lexicon
+from khmerthings.lexicon import (
+    WORD_SOURCES,
+    Lexicon,
+    default_lexicon,
+    load_lexicon,
+    load_variants,
+)
 from khmerthings.segmenter import break_words, mark_boundaries
 from khmerthings.sorting import khmer_sort_key, sort_lines
 from khmerthings.tokenizer import Token, TokenType, tokenize
@@ -22,6 +28,7 @@ __all__ = [
     "default_lexicon",
     "khmer_sort_key",
     "load_lexicon",
+    "load_variants",
     "mark_boundaries",
     "segment_clusters",
     "sort_lines",
