@@ -11,21 +11,26 @@ from khmerthings.lexicon import (
 )
 from khmerthings.segmenter import break_words, mark_boundaries
 from khmerthings.sorting import khmer_sort_key, sort_lines
+from khmerthings.spellcheck import IssueKind, SpellIssue, check_spelling, fix_spelling
 from khmerthings.tokenizer import Token, TokenType, tokenize
 
-__version__ = "0.6.0"
+__version__ = "0.7.0"
 
 __all__ = [
     "WORD_SOURCES",
+    "IssueKind",
     "Lexicon",
+    "SpellIssue",
     "Token",
     "TokenType",
     "WordCount",
     "__version__",
     "analyze",
     "break_words",
+    "check_spelling",
     "count_words",
     "default_lexicon",
+    "fix_spelling",
     "khmer_sort_key",
     "load_lexicon",
     "load_variants",

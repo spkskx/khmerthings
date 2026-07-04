@@ -130,6 +130,78 @@ class TestMain:
         assert main(["sort", str(a), str(b)]) == 0
         assert capsys.readouterr().out == "ក\nខ\nគ\n"
 
+    def test_spellcheck_clean_file(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        f = tmp_path / "text.txt"
+        f.write_text(SENTENCE + "\n", encoding="utf-8")
+        assert main(["spellcheck", str(f)]) == 0
+        assert capsys.readouterr().out == ""
+
+    def test_spellcheck_reports_variant(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        f = tmp_path / "text.txt"
+        f.write_text("ខ្ញុំសំរាប់ការងារ\n", encoding="utf-8")
+        assert main(["spellcheck", str(f)]) == 1
+        assert capsys.readouterr().out == f"{f}:1:6: variant: សំរាប់ -> សម្រាប់\n"
+
+    def test_spellcheck_json(self, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+        f = tmp_path / "text.txt"
+        f.write_text("សំរាប់\n", encoding="utf-8")
+        assert main(["spellcheck", "--json", str(f)]) == 1
+        data = json.loads(capsys.readouterr().out)
+        assert data == [
+            {
+                "source": str(f),
+                "line": 1,
+                "col": 1,
+                "start": 0,
+                "end": 6,
+                "text": "សំរាប់",
+                "kind": "variant",
+                "suggestions": ["សម្រាប់"],
+            }
+        ]
+
+    def test_spellcheck_json_clean_is_empty_list(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        f = tmp_path / "text.txt"
+        f.write_text(SENTENCE, encoding="utf-8")
+        assert main(["spellcheck", "--json", str(f)]) == 0
+        assert json.loads(capsys.readouterr().out) == []
+
+    def test_spellcheck_max_suggestions(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        f = tmp_path / "text.txt"
+        f.write_text("ស្រឡាញ\n", encoding="utf-8")  # unknown, near ស្រឡាញ់
+        assert main(["spellcheck", "--max-suggestions", "0", str(f)]) == 1
+        assert capsys.readouterr().out == f"{f}:1:1: unknown: ស្រឡាញ\n"
+
+    def test_spellcheck_include_names(self, tmp_path: Path) -> None:
+        f = tmp_path / "text.txt"
+        f.write_text("សុខា\n", encoding="utf-8")  # given name, only in names list
+        assert main(["spellcheck", str(f)]) == 1
+        assert main(["spellcheck", "--include", "names", str(f)]) == 0
+
+    def test_spellfix_rewrites_variants(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        f = tmp_path / "text.txt"
+        f.write_text("ខ្ញុំសំរាប់ការងារ\nសំរាប់ កំរិត\n", encoding="utf-8")
+        assert main(["spellfix", str(f)]) == 0
+        assert capsys.readouterr().out == "ខ្ញុំសម្រាប់ការងារ\nសម្រាប់ កម្រិត\n"
+
+    def test_spellfix_clean_text_unchanged(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        f = tmp_path / "text.txt"
+        f.write_text(SENTENCE + "\n", encoding="utf-8")
+        assert main(["spellfix", str(f)]) == 0
+        assert capsys.readouterr().out == SENTENCE + "\n"
+
     def test_missing_file_is_a_clean_error(self, capsys: pytest.CaptureFixture[str]) -> None:
         assert main(["count", "/nonexistent/path.txt"]) == 1
         err = capsys.readouterr().err
@@ -185,6 +257,28 @@ class TestSubprocess:
         )
         assert proc.returncode == 0
         assert proc.stdout == "កា\nក្រ\nខ្ញុំ\n"
+
+    def test_spellcheck_stdin_exit_code(self) -> None:
+        proc = subprocess.run(
+            [sys.executable, "-m", "khmerthings", "spellcheck"],
+            input="សំរាប់\n",
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+        assert proc.returncode == 1
+        assert "សម្រាប់" in proc.stdout
+
+    def test_spellfix_stdin(self) -> None:
+        proc = subprocess.run(
+            [sys.executable, "-m", "khmerthings", "spellfix"],
+            input="សំរាប់\n",
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+        assert proc.returncode == 0
+        assert proc.stdout == "សម្រាប់\n"
 
     def test_version(self) -> None:
         proc = subprocess.run(

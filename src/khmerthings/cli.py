@@ -16,6 +16,7 @@ from khmerthings.counter import analyze
 from khmerthings.lexicon import WORD_SOURCES, Lexicon, load_lexicon
 from khmerthings.segmenter import break_words, mark_boundaries
 from khmerthings.sorting import sort_lines
+from khmerthings.spellcheck import check_spelling, fix_spelling
 
 __all__ = ["main"]
 
@@ -90,6 +91,50 @@ def _cmd_sort(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_spellcheck(args: argparse.Namespace) -> int:
+    paths: list[str] = args.files or ["-"]
+    lexicon = _lexicon_from_args(args)
+    json_issues: list[dict[str, object]] = []
+    found = False
+    for path in paths:
+        source, text = _read_source(path)
+        for lineno, line in enumerate(text.splitlines(), start=1):
+            for issue in check_spelling(line, lexicon, max_suggestions=args.max_suggestions):
+                found = True
+                if args.json:
+                    json_issues.append(
+                        {
+                            "source": source,
+                            "line": lineno,
+                            "col": issue.start + 1,
+                            "start": issue.start,
+                            "end": issue.end,
+                            "text": issue.text,
+                            "kind": issue.kind.value,
+                            "suggestions": list(issue.suggestions),
+                        }
+                    )
+                else:
+                    location = f"{source}:{lineno}:{issue.start + 1}"
+                    message = f"{location}: {issue.kind.value}: {issue.text}"
+                    if issue.suggestions:
+                        message += " -> " + ", ".join(issue.suggestions)
+                    print(message)
+    if args.json:
+        print(json.dumps(json_issues, ensure_ascii=False, indent=2))
+    return 1 if found else 0
+
+
+def _cmd_spellfix(args: argparse.Namespace) -> int:
+    paths: list[str] = args.files or ["-"]
+    lexicon = _lexicon_from_args(args)
+    for path in paths:
+        _, text = _read_source(path)
+        for line in text.splitlines():
+            print(fix_spelling(line, lexicon))
+    return 0
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="khmerthings",
@@ -119,6 +164,28 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     _add_include_option(segment)
     segment.set_defaults(func=_cmd_segment)
+
+    spellcheck = subparsers.add_parser(
+        "spellcheck", help="report misspellings and unknown Khmer words"
+    )
+    spellcheck.add_argument("files", nargs="*", help="input files, or '-' for stdin (default)")
+    spellcheck.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    spellcheck.add_argument(
+        "--max-suggestions",
+        type=int,
+        default=3,
+        metavar="N",
+        help="maximum suggestions per unknown word (default: 3)",
+    )
+    _add_include_option(spellcheck)
+    spellcheck.set_defaults(func=_cmd_spellcheck)
+
+    spellfix = subparsers.add_parser(
+        "spellfix", help="rewrite known misspellings to their canonical spelling"
+    )
+    spellfix.add_argument("files", nargs="*", help="input files, or '-' for stdin (default)")
+    _add_include_option(spellfix)
+    spellfix.set_defaults(func=_cmd_spellfix)
 
     sort = subparsers.add_parser(
         "sort", help="sort lines in Khmer dictionary order (ascending by default)"

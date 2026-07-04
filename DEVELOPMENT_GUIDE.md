@@ -56,14 +56,14 @@ a change is done — CI enforces exactly these on every PR.
 ## Adding a new tool
 
 Follow the existing bottom-up architecture (chars → clusters → lexicon →
-tokenizer → tools). To add a tool, e.g. a spellchecker:
+tokenizer → tools). To add a tool, e.g. a POS tagger:
 
-1. Create `src/khmerthings/spellcheck.py`, building on the existing
+1. Create `src/khmerthings/postag.py`, building on the existing
    primitives (`segment_clusters`, `Lexicon.longest_match`, `tokenize`).
 2. Re-export the public API in `src/khmerthings/__init__.py` (`__all__`).
-3. Add a CLI subcommand in `src/khmerthings/cli.py` (`khmerthings spellcheck`).
-4. Add `tests/test_spellcheck.py` with unit + invariant tests.
-5. Write its per-tool document `docs/spellcheck.md` following the shared
+3. Add a CLI subcommand in `src/khmerthings/cli.py` (`khmerthings postag`).
+4. Add `tests/test_postag.py` with unit + invariant tests.
+5. Write its per-tool document `docs/postag.md` following the shared
    template used by the existing docs (What it does / Quick start / CLI
    reference / Python API / How it works / Guarantees & limitations /
    Related tools). All example outputs must be real, verified outputs.

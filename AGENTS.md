@@ -53,7 +53,7 @@ considering any change done.
    `variants`) + trie keyed by clusters; `longest_match` is the segmentation
    primitive; `load_lexicon(*sources)` merges sources (cached), `--include`
    on the CLI exposes the extra ones; `load_variants()` returns the
-   misspelling→canonical map (future spellfixer correction table).
+   misspelling→canonical map (the spellchecker/spellfixer correction table).
 4. `tokenizer.py` — lossless typed tokenization (Khmer words via greedy
    longest-match; unknown Khmer spans become `KHMER_UNKNOWN`, never dropped).
 5. `counter.py` — word counter tool (`count_words`, `analyze`).
@@ -63,11 +63,20 @@ considering any change done.
 7. `sorting.py` — Khmer dictionary-order line sorting (`sort_lines`,
    `khmer_sort_key`: per-cluster key `(base, coengs, vowels, signs)` —
    naive codepoint order is wrong for subscripts).
-8. `cli.py` — argparse subcommands, one per tool (`khmerthings count ...`,
-   `khmerthings segment ...`, `khmerthings sort ...`).
+8. `spellcheck.py` — spellchecker & spellfixer (`check_spelling` reports
+   `SpellIssue`s: VARIANT = variants-map hit with its canonical as the
+   suggestion, UNKNOWN = unmatched Khmer span with suggestions by
+   cluster-level edit distance ranked by `(distance, khmer_sort_key)`;
+   `fix_spelling` rewrites VARIANT spans only, never UNKNOWN). Tokenizes
+   against the caller's lexicon unioned with the variants keys; a spelling
+   present in the caller's lexicon is never flagged.
+9. `cli.py` — argparse subcommands, one per tool (`khmerthings count ...`,
+   `khmerthings segment ...`, `khmerthings sort ...`,
+   `khmerthings spellcheck ...` (exit 1 = issues found),
+   `khmerthings spellfix ...`).
 
-Planned tools (spellchecker/spellfixer — blocked on lexicon size, POS
-tagger, intent detector, paragraph categorizer) follow the same pattern:
+Planned tools (POS tagger, intent detector, paragraph categorizer) follow
+the same pattern:
 new module in `src/khmerthings/`, re-export in `__init__.py`, new CLI
 subcommand in `cli.py`, new `tests/test_<module>.py`, and a
 **per-tool document `docs/<tool>.md`** (see below).

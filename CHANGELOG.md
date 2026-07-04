@@ -5,7 +5,22 @@ All notable changes to khmerthings are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.7.0] - 2026-07-04
+
+### Added
+
+- Spellchecker & spellfixer tool (`spellcheck.py`): `check_spelling()`
+  reports `SpellIssue`s — known misspellings from the variants map
+  (`IssueKind.VARIANT`, canonical spelling as the suggestion) and
+  dictionary-unknown Khmer spans (`IssueKind.UNKNOWN`, suggestions ranked
+  by cluster-level edit distance then Khmer dictionary order) — with exact
+  NFC offsets; `fix_spelling()` rewrites known misspellings to their
+  canonical spelling and never touches anything else. New CLI subcommands
+  `khmerthings spellcheck` (grep-style or `--json` output,
+  `--max-suggestions`, `--include`; exits 1 when issues are found) and
+  `khmerthings spellfix`. Detection and suggestions are pure dictionary
+  lookups, so both improve automatically as the wordlists and variants map
+  grow. Documented in `docs/spellcheck.md` and `docs/spellfix.md`.
 
 ## [0.6.0] - 2026-07-04
 
@@ -160,7 +175,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (lint, Python 3.11–3.14 test matrix, build + wheel smoke test), MIT
   license, AGENTS.md/CLAUDE.md, DEVELOPMENT_GUIDE.md, PR template.
 
-[Unreleased]: https://github.com/spkskx/khmerthings/compare/v0.4.2...HEAD
+[0.7.0]: https://github.com/spkskx/khmerthings/compare/v0.6.0...v0.7.0
+[0.6.0]: https://github.com/spkskx/khmerthings/compare/v0.5.0...v0.6.0
+[0.5.0]: https://github.com/spkskx/khmerthings/compare/v0.4.3...v0.5.0
+[0.4.3]: https://github.com/spkskx/khmerthings/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/spkskx/khmerthings/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/spkskx/khmerthings/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/spkskx/khmerthings/compare/v0.3.0...v0.4.0

@@ -172,3 +172,5 @@ case or width of non-Khmer scripts).
 - [Word breaker](word-breaker.md) — split Khmer text into words (e.g. to
   produce the lines you sort).
 - [Word counter](word-counter.md) — count words in Khmer text.
+- [Spellchecker](spellcheck.md) — uses this collation to rank its
+  suggestions.

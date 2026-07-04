@@ -261,3 +261,5 @@ losslessly.
 
 - [Word counter](word-counter.md) — counts what this tool splits.
 - [Line sorter](line-sorter.md) — Khmer dictionary-order sorting.
+- [Spellchecker](spellcheck.md) / [Spellfixer](spellfix.md) — flag and fix
+  misspellings using the same segmentation engine.
