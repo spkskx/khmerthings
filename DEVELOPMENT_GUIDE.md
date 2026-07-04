@@ -45,8 +45,8 @@ a change is done — CI enforces exactly these on every PR.
 2. **Self-owned everything.** No third-party Khmer NLP libraries and no
    bulk-imported wordlists/corpora. Word data is hand-curated entry by
    entry in `src/khmerthings/data/` — web research to find and verify
-   candidates is fine; copying someone's wordlist wholesale is not. Note
-   candidate sources in the data file header.
+   candidates is fine; copying someone's wordlist wholesale is not. Do not
+   document data provenance (sources, corpora, tooling) anywhere in the repo.
 3. **Zero runtime dependencies.** Stdlib only; dev tooling is the only
    exception.
 4. **Tests first.** Every behavior change comes with tests. Prefer
@@ -87,7 +87,7 @@ anything people are called → `names`; register that shifts with time
   the loader rejects anything else (including within-file duplicates) at
   load time. The same entry may appear in different files (merged at load).
 - Keep entries in their category section; add a new `# --- section ---` when
-  needed. Note research sources in the file header comments.
+  needed. Do not note research sources or provenance in the files.
 - Words with subscript ta/da (្ត/្ដ) spelling variation should be added in
   **both** spellings — the two render identically and real text mixes them.
 - Beware visually identical strings with different codepoints; verify with

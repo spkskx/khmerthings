@@ -12,8 +12,11 @@ Deterministic Khmer language tools in Python. Note: the repo directory is
   dependencies on or copy from other Khmer NLP projects, and never
   bulk-import someone else's wordlist. Web research to *find and verify*
   candidate words/names/slang is allowed (user decision, 2026-07-03) — but
-  every entry is curated individually, spellings cross-checked, and sources
-  noted in the data file header. Data files under `src/khmerthings/data/`:
+  every entry is curated individually and spellings cross-checked.
+  **Never document data provenance** — how candidates were found, what
+  sources/corpora/tools were used — anywhere in the repo: not in data file
+  headers, docs, changelog, or commit messages (user decision, 2026-07-04).
+  Data files under `src/khmerthings/data/`:
   `words.txt` (core), `names.txt` (names, surnames, titles), `modern.txt`
   (slang, informal, loanwords, trending). All three are growable and merged
   via `load_lexicon(*sources)`.
@@ -122,7 +125,7 @@ change — not as an afterthought:
 - Frozen dataclasses for result types (`Token`, `WordCount`).
 - Wordlist files (`words.txt`, `names.txt`, `modern.txt`): one entry per
   line, UTF-8, NFC, Khmer letters/marks only, `#` comments, grouped by
-  category, sources noted in the header. High-frequency words with
+  category (no provenance notes). High-frequency words with
   subscript ta/da (្ត/្ដ) spelling variation are listed in both spellings —
   real-world text mixes them. Within a file duplicates are a load error;
   the same entry in different files is fine (merged at load).

@@ -50,9 +50,8 @@ sort_lines(["ក្រ", "កា", "កក"])                    # ['កក', '�
 - **Self-contained**: zero runtime dependencies; all word data is our own
   hand-curated set of growable wordlists — `words` (core vocabulary),
   `names` (people's names & titles), and `modern` (slang, loanwords,
-  trending terms) — 802 entries and growing. Candidates are researched from
-  public sources and verified entry by entry; no wordlist is imported
-  wholesale.
+  trending terms) — 1,583 entries and growing, each verified entry by
+  entry; no wordlist is imported wholesale.
 - **Lossless**: no character is ever dropped — unknown Khmer spans are
   reported, not discarded.
 - **Tested first**: every module ships with table-driven unit tests and

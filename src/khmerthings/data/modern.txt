@@ -1,11 +1,7 @@
 # khmerthings modern lexicon: slang, informal register, loanwords, and
 # trending vocabulary. One entry per line, UTF-8, NFC, Khmer letters/marks only.
-# Hand-curated entry by entry; candidates researched from public sources and
-# contemporary Khmer media usage (spellings cross-checked, no wordlist
-# imported wholesale):
-#   - https://km.wiktionary.org/wiki/ស្ទាវ
-#   - https://thmeythmey.com/detail/130843 (ឡូយ)
-#   - https://ling-app.com/blog/khmer-slang-words/
+# Hand-curated entry by entry (spellings cross-checked, no wordlist
+# imported wholesale).
 # This register shifts quickly; entries here are expected to grow and be
 # revised more often than words.txt.
 #
@@ -42,3 +38,22 @@
 កាដូ
 ភីហ្សា
 ប៊ិច
+
+# === batch 3 (2026-07-04) ===
+# --- loanwords from news & media ---
+ណាតូ
+រ៉យទ័រ
+ស៊ិនហួ
+ខេមបូឌា
+ខេមបូចា
+ដ្រូន
+គ្រុប
+ម៉ាក
+រ៉ិចទ័រ
+ត្រោត
+កាស៊ីណូ
+អឺរ៉ូ
+វេបសាយ
+# --- more loanwords ---
+ឌីជីថល
+បាក់ឌុប

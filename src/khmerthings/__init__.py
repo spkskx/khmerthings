@@ -7,7 +7,7 @@ from khmerthings.segmenter import break_words, mark_boundaries
 from khmerthings.sorting import khmer_sort_key, sort_lines
 from khmerthings.tokenizer import Token, TokenType, tokenize
 
-__version__ = "0.4.3"
+__version__ = "0.5.0"
 
 __all__ = [
     "WORD_SOURCES",

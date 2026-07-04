@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-07-04
+
+### Added
+
+- Lexicon batch 3: 784 new hand-curated, individually verified entries —
+  `words.txt` 610 → 1,216 lines, `names.txt` 212 → 405, `modern.txt`
+  44 → 66 (1,583 merged entries, up from 802). Includes all 12 month names,
+  days of the week, countries and world cities, all 25 Cambodian provinces
+  plus common districts, government and news vocabulary (with real-world
+  spelling variants such as រដ្ឋមន្ត្រី/រដ្ឋមន្រ្តី and ្ត/្ដ pairs), Khmer
+  surnames and given names, and transliterated foreign public figures.
+  Substantially improves word segmentation of real-world news text.
+
 ## [0.4.3] - 2026-07-03
 
 ### Added
@@ -42,9 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Two new growable wordlist sources alongside the core vocabulary
-  (candidates researched from public sources — Wikipedia's Cambodian-name
-  article, Behind the Name, Khmer Wiktionary and Khmer media — and curated
-  entry by entry, spellings cross-checked):
+  (curated entry by entry, spellings cross-checked):
   - `names.txt` (200 entries): Khmer surnames, given names, and honorific
     titles (ឯកឧត្តម, សម្តេច, …).
   - `modern.txt` (30 entries): slang (ឡូយ, ស្ទាវ), informal register,
@@ -57,9 +68,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Data policy clarified: web research to find/verify candidate entries is
-  allowed; bulk-importing third-party wordlists remains forbidden. Sources
-  are noted in each data file header.
+- Data policy clarified: all word data is self-curated entry by entry;
+  bulk-importing third-party wordlists remains forbidden.
 - Total curated entries: 802 across the three sources.
 
 ## [0.3.0] - 2026-07-03

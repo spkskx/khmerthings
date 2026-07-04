@@ -6,3 +6,6 @@ dist/
 .mypy_cache/
 .ruff_cache/
 .coverage
+
+# large local test corpora (user-crawled, never committed)
+khmer-test.txt
