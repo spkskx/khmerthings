@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- 41 lexicon entries fixing greedy-segmentation errors where a short name
+  entry shadowed the start of a longer word (e.g. សំបុត្រ, សេរីភាព, គណនី,
+  លីត្រ, ប្រមាណ, សមាគម), plus missing function words (ទី, ដ៏, ឱកាស, រីឯ) and
+  common -ដ្ឋាន compounds (មូលដ្ឋាន, ការដ្ឋាន, អាកាសយានដ្ឋាន). 1,622 merged
+  entries.
+
 ## [0.5.0] - 2026-07-04
 
 ### Added
