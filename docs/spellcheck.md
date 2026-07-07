@@ -41,7 +41,7 @@ check_spelling("ខ្ញុំសំរាប់ការងារ")
 ## CLI reference
 
 ```
-khmerthings spellcheck [files ...] [--json] [--max-suggestions N] [--include modern,names,variants]
+khmerthings spellcheck [files ...] [--json] [--max-suggestions N] [--only {variants,unknown}] [--include modern,names,variants]
 ```
 
 Every option, with a real example of its effect:
@@ -97,6 +97,20 @@ $ echo "ខ្ញុំស្រឡាញភាសាខ្មែរ" | khmerthi
 <stdin>:1:6: unknown: ស្រឡាញ -> ស្រឡាញ់
 ```
 
+### `--only {variants,unknown}` — restrict to one issue kind
+
+`variants` is the fast path: a pure dictionary lookup, no edit-distance
+search, so `--max-suggestions` has no visible effect with it (a variant
+issue always has exactly one suggestion, the canonical spelling). `unknown`
+runs only the edit-distance search:
+
+```sh
+$ echo "ខ្ញុំសំរាប់ការងារ" | khmerthings spellcheck --only variants
+<stdin>:1:6: variant: សំរាប់ -> សម្រាប់
+$ echo "ខ្ញុំស្រឡាញភាសាខ្មែរ" | khmerthings spellcheck --only unknown
+<stdin>:1:6: unknown: ស្រឡាញ -> ស្រឡាញ់
+```
+
 ### `--include modern,names,variants` — accept extra wordlists
 
 The core vocabulary is always active; `--include` adds the extra built-in
@@ -128,11 +142,43 @@ exit 1 with a `khmerthings: error:` line on stderr as an I/O failure.
 
 ## Python API
 
+### `check_variants(text, lexicon=None) -> list[SpellIssue]`
+
+The fast path: only `VARIANT` issues, pure dictionary lookup, no
+edit-distance search. Useful when you don't need unknown-word suggestions
+and want to skip their cost entirely:
+
+```python
+from khmerthings import check_variants
+
+check_variants("ខ្ញុំសំរាប់ការងារ")
+# [SpellIssue(text='សំរាប់', kind=<IssueKind.VARIANT: 'variant'>, start=5, end=11, suggestions=('សម្រាប់',))]
+
+check_variants("ខ្ញុំស្រឡាញភាសាខ្មែរ")   # unknown span, not a variant
+# []
+```
+
+### `check_unknown(text, lexicon=None, *, max_suggestions=3) -> list[SpellIssue]`
+
+Only `UNKNOWN` issues — the expensive path, since every unmatched span is
+edit-distance-searched against the whole lexicon:
+
+```python
+from khmerthings import check_unknown
+
+check_unknown("ខ្ញុំស្រឡាញភាសាខ្មែរ")
+# [SpellIssue(text='ស្រឡាញ', kind=<IssueKind.UNKNOWN: 'unknown'>, start=5, end=11, suggestions=('ស្រឡាញ់',))]
+
+check_unknown("ខ្ញុំសំរាប់ការងារ")   # a variant, not unknown
+# []
+```
+
 ### `check_spelling(text, lexicon=None, *, max_suggestions=3) -> list[SpellIssue]`
 
-Returns all spelling issues in `text`, in order of appearance. Non-Khmer
-text (Latin, digits, punctuation) is ignored. Clean or empty input returns
-`[]`.
+A thin wrapper merging `check_variants` and `check_unknown`, sorted by
+position. Returns all spelling issues in `text`, in order of appearance.
+Non-Khmer text (Latin, digits, punctuation) is ignored. Clean or empty
+input returns `[]`.
 
 ```python
 from khmerthings import check_spelling
@@ -198,6 +244,11 @@ check_spelling("ខ្ញុំស្រឡាញភាសាខ្មែរ", m
    `max_suggestions`. Spans longer than 8 clusters get no suggestions —
    they are almost certainly several adjacent unknown words, not one
    misspelled word.
+4. `check_spelling` is implemented as
+   `sorted(check_variants(text, lexicon) + check_unknown(text, lexicon, max_suggestions=max_suggestions), key=lambda issue: issue.start)`
+   — `check_variants` and `check_unknown` are independently callable when
+   you only need one kind (e.g. skipping the edit-distance cost entirely
+   with `check_variants`).
 
 ## Guarantees & limitations
 
@@ -224,6 +275,7 @@ check_spelling("ខ្ញុំស្រឡាញភាសាខ្មែរ", m
 | Check informal/social-media text | `khmerthings spellcheck --include names,modern file.txt` |
 | Issues as data for another program | `khmerthings spellcheck --json file.txt` |
 | Just detect, no suggestions (fastest) | `khmerthings spellcheck --max-suggestions 0 file.txt` |
+| Fast misspelling-only check (no edit-distance cost) | `khmerthings spellcheck --only variants file.txt` / `check_variants(text)` |
 | Check against a domain dictionary | `check_spelling(text, Lexicon.from_lines(open("domain.txt")))` |
 | Find words to add to the lexicon | `khmerthings spellcheck --json corpus.txt \| jq -r '.[] \| select(.kind=="unknown") \| .text' \| sort -u` |
 

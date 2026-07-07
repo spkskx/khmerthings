@@ -7,8 +7,10 @@ as the lexicon data files grow:
   the variants map (``VARIANT``, with its canonical spelling as the single
   suggestion) or because it matches no lexicon word at all (``UNKNOWN``,
   with suggestions ranked by cluster-level edit distance to lexicon words).
-- :func:`check_spelling` reports issues with exact offsets; it never
-  modifies text.
+- :func:`check_variants` reports only ``VARIANT`` issues (cheap dictionary
+  lookup); :func:`check_unknown` reports only ``UNKNOWN`` issues (the
+  expensive edit-distance search, for suggestions); :func:`check_spelling`
+  merges both, sorted by position. None of them modify text.
 - :func:`fix_spelling` rewrites only known misspellings to their canonical
   spelling and copies everything else verbatim. Unknown words are never
   auto-fixed — a word missing from the lexicon is not proof it is wrong.
@@ -26,7 +28,14 @@ from khmerthings.lexicon import Lexicon, _checking_lexicon, default_lexicon, loa
 from khmerthings.sorting import SortKey, khmer_sort_key
 from khmerthings.tokenizer import TokenType, tokenize
 
-__all__ = ["IssueKind", "SpellIssue", "check_spelling", "fix_spelling"]
+__all__ = [
+    "IssueKind",
+    "SpellIssue",
+    "check_spelling",
+    "check_unknown",
+    "check_variants",
+    "fix_spelling",
+]
 
 #: Unknown spans longer than this (in clusters) get no suggestions: greedy
 #: segmentation lumps adjacent unknown words into one span, and edit-distance
@@ -89,34 +98,75 @@ def _suggest(span: str, lexicon: Lexicon, max_suggestions: int) -> tuple[str, ..
     return tuple(word for _, _, word in ranked[:max_suggestions])
 
 
-def check_spelling(
-    text: str, lexicon: Lexicon | None = None, *, max_suggestions: int = 3
-) -> list[SpellIssue]:
-    """Report spelling issues in *text*, in order of appearance.
+def check_variants(text: str, lexicon: Lexicon | None = None) -> list[SpellIssue]:
+    """Report known-misspelling (``VARIANT``) issues in *text*, in order of appearance.
 
-    Tokenizes with *lexicon* (default: the core ``"words"`` source) extended
-    by the variant misspellings. A token that is a variant misspelling — and
-    not itself a word of *lexicon* — becomes a ``VARIANT`` issue whose only
-    suggestion is the canonical spelling. An unmatched Khmer span becomes an
-    ``UNKNOWN`` issue with up to *max_suggestions* nearby lexicon words as
-    suggestions (never variant misspellings). Non-Khmer text is ignored.
+    Fast: pure dictionary lookup, no edit-distance search. Tokenizes with
+    *lexicon* (default: the core ``"words"`` source) extended by the variant
+    misspellings; a token that is a variant misspelling — and not itself a
+    word of *lexicon* — becomes a ``VARIANT`` issue whose only suggestion is
+    the canonical spelling. Never reports ``UNKNOWN`` issues; see
+    :func:`check_unknown` for those.
     """
     if lexicon is None:
         lexicon = default_lexicon()
     variants = load_variants()
     issues: list[SpellIssue] = []
     for token in tokenize(text, _checking_lexicon(lexicon)):
-        if token.type is TokenType.KHMER_WORD:
-            if token.text in variants and token.text not in lexicon:
-                canonical = variants[token.text]
-                issues.append(
-                    SpellIssue(token.text, IssueKind.VARIANT, token.start, token.end, (canonical,))
-                )
-        elif token.type is TokenType.KHMER_UNKNOWN:
+        if (
+            token.type is TokenType.KHMER_WORD
+            and token.text in variants
+            and token.text not in lexicon
+        ):
+            canonical = variants[token.text]
+            issues.append(
+                SpellIssue(token.text, IssueKind.VARIANT, token.start, token.end, (canonical,))
+            )
+    return issues
+
+
+def check_unknown(
+    text: str, lexicon: Lexicon | None = None, *, max_suggestions: int = 3
+) -> list[SpellIssue]:
+    """Report unmatched-Khmer-span (``UNKNOWN``) issues in *text*, in order of appearance.
+
+    The expensive path: every unmatched Khmer span is edit-distance-searched
+    against the whole lexicon for suggestions. Tokenizes with *lexicon*
+    (default: the core ``"words"`` source) extended by the variant
+    misspellings, so known misspellings are excluded here (they surface as
+    single ``KHMER_WORD`` tokens, not ``KHMER_UNKNOWN``); see
+    :func:`check_variants` for those. Never reports ``VARIANT`` issues.
+    """
+    if lexicon is None:
+        lexicon = default_lexicon()
+    issues: list[SpellIssue] = []
+    for token in tokenize(text, _checking_lexicon(lexicon)):
+        if token.type is TokenType.KHMER_UNKNOWN:
             suggestions = _suggest(token.text, lexicon, max_suggestions)
             issues.append(
                 SpellIssue(token.text, IssueKind.UNKNOWN, token.start, token.end, suggestions)
             )
+    return issues
+
+
+def check_spelling(
+    text: str, lexicon: Lexicon | None = None, *, max_suggestions: int = 3
+) -> list[SpellIssue]:
+    """Report spelling issues in *text*, in order of appearance.
+
+    A thin wrapper merging :func:`check_variants` and :func:`check_unknown`,
+    sorted by position. A token that is a variant misspelling — and not
+    itself a word of *lexicon* — becomes a ``VARIANT`` issue whose only
+    suggestion is the canonical spelling. An unmatched Khmer span becomes an
+    ``UNKNOWN`` issue with up to *max_suggestions* nearby lexicon words as
+    suggestions (never variant misspellings). Non-Khmer text is ignored.
+    """
+    if lexicon is None:
+        lexicon = default_lexicon()
+    issues = check_variants(text, lexicon) + check_unknown(
+        text, lexicon, max_suggestions=max_suggestions
+    )
+    issues.sort(key=lambda issue: issue.start)
     return issues
 
 

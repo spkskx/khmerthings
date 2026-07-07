@@ -10,6 +10,8 @@ spaces between words, so even "simple" operations like counting or sorting
 need real language handling — khmerthings implements that from first
 principles.
 
+**[Try it in your browser →](https://spkskx.github.io/khmerthings-demo/)**
+
 ## Tools
 
 Each tool is available both as a Python API and a CLI subcommand, and has

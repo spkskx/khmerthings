@@ -3,21 +3,28 @@
 ## What it does
 
 Turns loosely-typed, raw Khmer text into clean, ready-to-use text in one
-pass. It combines three deterministic steps:
+pass. It composes three independently-callable, deterministic steps:
 
-1. **Spellfix** — known misspellings from the hand-curated variants map are
-   rewritten to their canonical spelling (same rule as the
-   [spellfixer](spellfix.md)).
-2. **Hidden-space placement** — a zero-width space (U+200B) is inserted
-   between adjacent Khmer/Latin/number words that have no separator at all
-   (the same boundary rule [`mark_boundaries`](word-breaker.md) uses).
-   Whitespace elsewhere is collapsed to a single space and leading/trailing
-   whitespace is dropped. A visible space a human already placed between
-   two words (a phrase break) is never downgraded to invisible — it stays
-   a single visible space.
-3. **Sentence-stop spacing** — whitespace immediately before a Khmer full
-   stop (។ khan, ៕ bariyoosan) is dropped, and exactly one space is
-   ensured immediately after it.
+1. **Spellfix** (`fix_spelling`, [spellfixer](spellfix.md)) — known
+   misspellings from the hand-curated variants map are rewritten to their
+   canonical spelling.
+2. **Hidden-space placement** (`space_words`) — a zero-width space (U+200B)
+   is inserted between adjacent Khmer/Latin/number words that have no
+   separator at all (the same boundary rule
+   [`mark_boundaries`](word-breaker.md) uses). Whitespace elsewhere is
+   collapsed to a single space and leading/trailing whitespace is dropped.
+   A visible space a human already placed between two words (a phrase
+   break) is never downgraded to invisible — it stays a single visible
+   space.
+3. **Sentence-stop spacing** (`space_sentences`) — whitespace immediately
+   before a Khmer full stop (។ khan, ៕ bariyoosan) is dropped, and exactly
+   one space is ensured immediately after it. This step is a pure string
+   scan — no tokenizer, no lexicon.
+
+Each step is also usable on its own — see the Python API section — but
+`normalize`/`normalize_text` remain the one CLI subcommand and function;
+the individual passes are exposed as library-level refinements and a
+`--only` flag, not separate tools.
 
 ## Quick start
 
@@ -41,7 +48,7 @@ normalize_text("ខ្ញុំសំរាប់ការងារ")
 ## CLI reference
 
 ```
-khmerthings normalize [files ...] [--include modern,names,variants]
+khmerthings normalize [files ...] [--only {words,sentences}] [--include modern,names,variants]
 ```
 
 Every option, with a real example of its effect:
@@ -93,6 +100,20 @@ $ echo "ខ្ញុំទៅផ្សារ ។ទិញត្រី" | khmerth
 The space before ។ is dropped, and one is inserted after it even though the
 input had none.
 
+### `--only {words,sentences}` — apply a single pass
+
+`words` runs spellfix + hidden-space placement + whitespace collapse, but
+skips sentence-stop spacing; `sentences` runs only the sentence-stop pass.
+`sentences` ignores `--include` and the lexicon entirely — `space_sentences`
+takes no lexicon argument at all, so this is not a bug:
+
+```sh
+$ echo "ខ្ញុំទៅផ្សារ ។ទិញត្រី" | khmerthings normalize --only words
+ខ្ញុំ​ទៅ​ផ្សារ ។ទិញ​ត្រី
+$ echo "ខ្ញុំទៅផ្សារ ។ទិញត្រី" | khmerthings normalize --only sentences
+ខ្ញុំទៅផ្សារ។ ទិញត្រី
+```
+
 ### `--include modern,names,variants` — match extra wordlists
 
 The core vocabulary is always active; `--include` adds the extra built-in
@@ -113,6 +134,34 @@ $ echo "សុខាដារ៉ាឡូយណាស់" | khmerthings normaliz
   prints the usage message to stderr.
 
 ## Python API
+
+### `space_words(text, lexicon=None) -> str`
+
+Only the hidden-space/whitespace pass — no spellfixing (see
+[`fix_spelling`](spellfix.md#fix_spellingtext-lexiconnone---str)), no
+sentence-stop spacing (see `space_sentences` below):
+
+```python
+from khmerthings import space_words
+
+space_words("ខ្ញុំទៅ  ផ្សារ")
+# 'ខ្ញុំ​ទៅ ផ្សារ'
+
+space_words("សំរាប់ការងារ")   # variant spelling passed through untouched
+# 'សំរាប់​ការងារ'
+```
+
+### `space_sentences(text) -> str`
+
+Only the Khmer sentence-stop spacing pass — a pure string scan, no
+tokenizer, no lexicon argument:
+
+```python
+from khmerthings import space_sentences
+
+space_sentences("ខ្ញុំទៅផ្សារ ។ទិញត្រី")
+# 'ខ្ញុំទៅផ្សារ។ ទិញត្រី'
+```
 
 ### `normalize_text(text, lexicon=None) -> str`
 
@@ -142,27 +191,31 @@ normalize_text("សំរាប់", Lexicon(["សំរាប់"]))
 
 ## How it works
 
-1. The text is tokenized exactly like the [word breaker](word-breaker.md)
+`normalize_text` is `space_sentences(space_words(fix_spelling(text, lexicon), lexicon))`.
+
+1. `fix_spelling` tokenizes exactly like the [word breaker](word-breaker.md)
    does — greedy longest match over character clusters — but against the
    chosen lexicon *plus* the variant misspellings, so known misspellings
-   surface as single tokens (same tokenization `spellfix` uses).
-2. The text is rebuilt token by token. A variant-map token (not a word of
-   the caller's lexicon) is replaced by its canonical spelling; every other
-   word token passes through unchanged.
-3. Whitespace tokens are buffered rather than emitted immediately, so the
-   separator between two real tokens can be decided once both sides are
-   known:
-   - a token that is a lone ។ or ៕ character never gets a separator before
-     it, and always gets exactly one space after it;
+   surface as single tokens; each variant-map token (not a word of the
+   caller's lexicon) is replaced by its canonical spelling.
+2. `space_words` tokenizes the same way and rebuilds the text token by
+   token. Whitespace tokens are buffered rather than emitted immediately,
+   so the separator between two real tokens can be decided once both sides
+   are known:
    - two adjacent word-type tokens (Khmer, Latin, number) with nothing
      between them get a single hidden space (U+200B); if a visible
      whitespace run already separated them, it collapses to a single
      visible space instead — it is never downgraded to hidden;
    - any other whitespace run collapses to a single visible space; no
      whitespace at all stays as no separator.
-4. Because a separator is only ever emitted *before* a token, whitespace at
-   the very start or end of the line is simply never written — the
-   trim happens for free.
+   Because a separator is only ever emitted *before* a token, whitespace at
+   the very start or end of the line is simply never written — the trim
+   happens for free.
+3. `space_sentences` is a pure string scan over the result — no tokenizer,
+   no lexicon involved. A lone ។ or ៕ (not adjacent to other punctuation)
+   never has a separator before it, and always gets exactly one space
+   after it, unless nothing but whitespace follows through the end of the
+   text.
 
 ## Guarantees & limitations
 
@@ -185,6 +238,10 @@ normalize_text("សំរាប់", Lexicon(["សំរាប់"]))
   punctuation (`.`, `!`, `?`) and other Khmer punctuation (៖, ៗ, ៘, ៙, ៚)
   only get the general whitespace collapse rule, not the trim-before/
   space-after treatment.
+- **`space_words` and `space_sentences` are independently usable.** They
+  are library-level API refinements of the same tool, documented here
+  rather than as new CLI subcommands — see the Python API section and the
+  CLI's `--only` flag.
 
 ## Task recipes
 
@@ -195,6 +252,8 @@ normalize_text("សំរាប់", Lexicon(["សំរាប់"]))
 | Normalize informal/social-media text | `khmerthings normalize --include names,modern file.txt` |
 | Prepare a corpus for line-breaking or search indexing | `khmerthings normalize corpus.txt > corpus.clean.txt` |
 | Check what's still unknown after normalizing | `khmerthings normalize f.txt \| khmerthings spellcheck` |
+| Only re-space, skip sentence-stop tidying | `khmerthings normalize --only words file.txt` / `space_words(text)` |
+| Only tidy sentence-stop spacing | `khmerthings normalize --only sentences file.txt` / `space_sentences(text)` |
 
 ## Related tools
 

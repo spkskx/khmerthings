@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-07-07
+
+### Added
+
+- `check_variants` and `check_unknown` in `spellcheck.py`: the two detection
+  algorithms `check_spelling` already ran, now independently callable.
+- `--only {variants,unknown}` on `khmerthings spellcheck` to run a single
+  detection kind.
+- `space_words` and `space_sentences` in `normalize.py`: the word-boundary/
+  whitespace pass and the Khmer sentence-stop spacing pass, now independently
+  callable. `space_sentences` is a pure, lexicon-free string scan.
+- `--only {words,sentences}` on `khmerthings normalize` to run a single pass.
+- README link to the online demo (https://spkskx.github.io/khmerthings-demo/).
+
+### Changed
+
+- `check_spelling` is now a thin wrapper merging `check_variants` and
+  `check_unknown`, sorted by position; behavior and output are unchanged.
+- `normalize_text` is now a composition of `spellcheck.fix_spelling`,
+  `space_words`, and `space_sentences`; it no longer duplicates the
+  variant-fix rule inline. Behavior and output are unchanged.
+
 ## [0.9.0] - 2026-07-07
 
 ### Added

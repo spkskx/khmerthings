@@ -67,21 +67,23 @@ considering any change done.
 7. `sorting.py` — Khmer dictionary-order line sorting (`sort_lines`,
    `khmer_sort_key`: per-cluster key `(base, coengs, vowels, signs)` —
    naive codepoint order is wrong for subscripts).
-8. `spellcheck.py` — spellchecker & spellfixer (`check_spelling` reports
-   `SpellIssue`s: VARIANT = variants-map hit with its canonical as the
-   suggestion, UNKNOWN = unmatched Khmer span with suggestions by
-   cluster-level edit distance ranked by `(distance, khmer_sort_key)`;
-   `fix_spelling` rewrites VARIANT spans only, never UNKNOWN). Tokenizes
-   against the caller's lexicon unioned with the variants keys (the
-   lexicon+variants union builder, `_checking_lexicon`, lives in
-   `lexicon.py` and is shared with `normalize.py`); a spelling present in
-   the caller's lexicon is never flagged.
-9. `normalize.py` — text normalizer (`normalize_text`): reuses
-   `spellcheck`'s variant-fix rule plus segmentation-aware spacing —
-   hidden zero-width space at bare Khmer word boundaries (same rule as
-   `mark_boundaries`), collapsed/trimmed whitespace elsewhere, and Khmer
-   sentence-stop spacing (no space before ។/៕, one space after, via the
-   `chars.is_khmer_sentence_stop` primitive). Idempotent.
+8. `spellcheck.py` — spellchecker & spellfixer. `check_variants` (VARIANT
+   only, plain dict lookup) and `check_unknown` (UNKNOWN only, cluster-level
+   edit distance ranked by `(distance, khmer_sort_key)`) are the two
+   detection primitives; `check_spelling` is a thin wrapper merging both,
+   sorted by `start`. `fix_spelling` rewrites VARIANT spans only, never
+   UNKNOWN. All tokenize against the caller's lexicon unioned with the
+   variants keys (the lexicon+variants union builder, `_checking_lexicon`,
+   lives in `lexicon.py` and is shared with `normalize.py`); a spelling
+   present in the caller's lexicon is never flagged.
+9. `normalize.py` — text normalizer (`normalize_text`): composes
+   `spellcheck.fix_spelling`, `space_words` (segmentation-aware spacing —
+   hidden zero-width space at bare Khmer word boundaries, same rule as
+   `mark_boundaries`, collapsed/trimmed whitespace elsewhere), and
+   `space_sentences` (Khmer sentence-stop spacing — no space before ។/៕,
+   one space after, via the `chars.is_khmer_sentence_stop` primitive; a
+   pure string scan, no tokenizer/lexicon). All three are independently
+   callable. Idempotent.
 10. `condense.py` — content-word extractor (`content_words`,
     `condense_text`, `content_tokens`). *Lossy* — the only tool that does
     not reproduce its input. Tokenizes against the caller's lexicon unioned
@@ -91,9 +93,11 @@ considering any change done.
     question). Feeds the planned intent detector.
 11. `cli.py` — argparse subcommands, one per tool (`khmerthings count ...`,
     `khmerthings segment ...`, `khmerthings sort ...`,
-    `khmerthings spellcheck ...` (exit 1 = issues found),
-    `khmerthings spellfix ...`, `khmerthings normalize ...`,
-    `khmerthings condense ...` (`--words`, `--remove`)).
+    `khmerthings spellcheck ...` (exit 1 = issues found; `--only
+    {variants,unknown}` runs a single detection kind),
+    `khmerthings spellfix ...`,
+    `khmerthings normalize ...` (`--only {words,sentences}` runs a single
+    pass), `khmerthings condense ...` (`--words`, `--remove`)).
 
 Planned tools (intent detector — over the condenser's content words —
 paragraph categorizer) follow the same pattern. (A POS tagger is *not*

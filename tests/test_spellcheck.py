@@ -3,7 +3,14 @@ import unicodedata
 import pytest
 
 from khmerthings.lexicon import Lexicon, load_variants
-from khmerthings.spellcheck import IssueKind, SpellIssue, check_spelling, fix_spelling
+from khmerthings.spellcheck import (
+    IssueKind,
+    SpellIssue,
+    check_spelling,
+    check_unknown,
+    check_variants,
+    fix_spelling,
+)
 
 CLEAN_SENTENCE = "ខ្ញុំស្រឡាញ់ភាសាខ្មែរ"
 VARIANT_SENTENCE = "ខ្ញុំសំរាប់ការងារ"  # សំរាប់ is a variant of សម្រាប់
@@ -58,6 +65,93 @@ class TestCheckSpelling:
     def test_deterministic(self) -> None:
         text = "ខ្ញុំសំរាបភាសា"
         assert check_spelling(text) == check_spelling(text)
+
+    def test_equals_merged_check_variants_and_check_unknown(self) -> None:
+        text = "សំរាប់ ស្រឡាញ"  # a variant plus an unknown span
+        merged = sorted(check_variants(text) + check_unknown(text), key=lambda i: i.start)
+        assert check_spelling(text) == merged
+
+    def test_issues_ordered_by_position_mixed_kinds(self) -> None:
+        issues = check_spelling("សំរាប់ ស្រឡាញ")
+        assert [i.kind for i in issues] == [IssueKind.VARIANT, IssueKind.UNKNOWN]
+        assert issues[0].start < issues[1].start
+
+
+class TestCheckVariants:
+    def test_variant_reported_with_canonical(self) -> None:
+        assert check_variants(VARIANT_SENTENCE) == [
+            SpellIssue("សំរាប់", IssueKind.VARIANT, 5, 11, ("សម្រាប់",))
+        ]
+
+    def test_caller_lexicon_overrides_variant(self) -> None:
+        lex = Lexicon(["សំរាប់"])
+        assert check_variants("សំរាប់", lex) == []
+
+    def test_variant_detected_with_custom_lexicon(self) -> None:
+        lex = Lexicon(["ខ្ញុំ"])
+        assert check_variants("សំរាប់", lex) == [
+            SpellIssue("សំរាប់", IssueKind.VARIANT, 0, 6, ("សម្រាប់",))
+        ]
+
+    def test_clean_text_has_no_issues(self) -> None:
+        assert check_variants(CLEAN_SENTENCE) == []
+
+    def test_empty(self) -> None:
+        assert check_variants("") == []
+
+    def test_non_khmer_ignored(self) -> None:
+        assert check_variants("Hello world 123 !?") == []
+
+    def test_never_reports_unknown_issues(self) -> None:
+        text = "ខ្ញុំស្រឡាញភាសាខ្មែរ"  # unknown span, not a variant
+        assert check_variants(text) == []
+
+    def test_deterministic(self) -> None:
+        assert check_variants(VARIANT_SENTENCE) == check_variants(VARIANT_SENTENCE)
+
+
+class TestCheckUnknown:
+    def test_unknown_reported_with_nearby_word(self) -> None:
+        issues = check_unknown("ខ្ញុំស្រឡាញភាសាខ្មែរ")
+        assert len(issues) == 1
+        issue = issues[0]
+        assert issue.kind is IssueKind.UNKNOWN
+        assert issue.text == "ស្រឡាញ"
+        assert (issue.start, issue.end) == (5, 11)
+        assert "ស្រឡាញ់" in issue.suggestions
+
+    def test_ranked_by_distance_then_khmer_order(self) -> None:
+        lex = Lexicon(["កខចឆ", "កខគជ", "កខគច"])
+        issues = check_unknown("កខគង", lex)
+        assert len(issues) == 1
+        assert issues[0].suggestions == ("កខគច", "កខគជ", "កខចឆ")
+
+    def test_max_suggestions_truncates(self) -> None:
+        lex = Lexicon(["កខចឆ", "កខគជ", "កខគច"])
+        issues = check_unknown("កខគង", lex, max_suggestions=1)
+        assert issues[0].suggestions == ("កខគច",)
+
+    def test_max_suggestions_zero(self) -> None:
+        issues = check_unknown("ស្រឡាញ", max_suggestions=0)
+        assert issues[0].suggestions == ()
+
+    def test_long_unknown_span_gets_no_suggestions(self) -> None:
+        lex = Lexicon(["ខ្ញុំ"])
+        issues = check_unknown("កខគឃងចឆជឈញ", lex)
+        assert len(issues) == 1
+        assert issues[0].suggestions == ()
+
+    def test_no_suggestion_when_nothing_is_close(self) -> None:
+        lex = Lexicon(["ខ្ញុំ"])
+        issues = check_unknown("សាលារៀន", lex)
+        assert issues[0].suggestions == ()
+
+    def test_never_reports_variant_issues(self) -> None:
+        assert check_unknown(VARIANT_SENTENCE) == []
+
+    def test_deterministic(self) -> None:
+        text = "ខ្ញុំស្រឡាញភាសាខ្មែរ"
+        assert check_unknown(text) == check_unknown(text)
 
 
 class TestSuggestions:

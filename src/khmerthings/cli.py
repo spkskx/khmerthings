@@ -15,10 +15,16 @@ from khmerthings import __version__
 from khmerthings.condense import DEFAULT_REMOVE, condense_text, content_words
 from khmerthings.counter import analyze
 from khmerthings.lexicon import STOPWORD_CATEGORIES, WORD_SOURCES, Lexicon, load_lexicon
-from khmerthings.normalize import normalize_text
+from khmerthings.normalize import normalize_text, space_sentences, space_words
 from khmerthings.segmenter import break_words, mark_boundaries
 from khmerthings.sorting import sort_lines
-from khmerthings.spellcheck import check_spelling, fix_spelling
+from khmerthings.spellcheck import (
+    SpellIssue,
+    check_spelling,
+    check_unknown,
+    check_variants,
+    fix_spelling,
+)
 
 __all__ = ["main"]
 
@@ -93,6 +99,14 @@ def _cmd_sort(args: argparse.Namespace) -> int:
     return 0
 
 
+def _spell_issues(args: argparse.Namespace, lexicon: Lexicon, line: str) -> list[SpellIssue]:
+    if args.only == "variants":
+        return check_variants(line, lexicon)
+    if args.only == "unknown":
+        return check_unknown(line, lexicon, max_suggestions=args.max_suggestions)
+    return check_spelling(line, lexicon, max_suggestions=args.max_suggestions)
+
+
 def _cmd_spellcheck(args: argparse.Namespace) -> int:
     paths: list[str] = args.files or ["-"]
     lexicon = _lexicon_from_args(args)
@@ -101,7 +115,7 @@ def _cmd_spellcheck(args: argparse.Namespace) -> int:
     for path in paths:
         source, text = _read_source(path)
         for lineno, line in enumerate(text.splitlines(), start=1):
-            for issue in check_spelling(line, lexicon, max_suggestions=args.max_suggestions):
+            for issue in _spell_issues(args, lexicon, line):
                 found = True
                 if args.json:
                     json_issues.append(
@@ -137,13 +151,21 @@ def _cmd_spellfix(args: argparse.Namespace) -> int:
     return 0
 
 
+def _normalized(args: argparse.Namespace, lexicon: Lexicon, line: str) -> str:
+    if args.only == "words":
+        return space_words(fix_spelling(line, lexicon), lexicon)
+    if args.only == "sentences":
+        return space_sentences(line)
+    return normalize_text(line, lexicon)
+
+
 def _cmd_normalize(args: argparse.Namespace) -> int:
     paths: list[str] = args.files or ["-"]
     lexicon = _lexicon_from_args(args)
     for path in paths:
         _, text = _read_source(path)
         for line in text.splitlines():
-            print(normalize_text(line, lexicon))
+            print(_normalized(args, lexicon, line))
     return 0
 
 
@@ -207,6 +229,12 @@ def _build_parser() -> argparse.ArgumentParser:
         metavar="N",
         help="maximum suggestions per unknown word (default: 3)",
     )
+    spellcheck.add_argument(
+        "--only",
+        choices=["variants", "unknown"],
+        help="report only one issue kind: variants (fast) or unknown (with suggestions); "
+        "default: both",
+    )
     _add_include_option(spellcheck)
     spellcheck.set_defaults(func=_cmd_spellcheck)
 
@@ -221,6 +249,12 @@ def _build_parser() -> argparse.ArgumentParser:
         "normalize", help="spellfix and re-space text into clean, ready-to-use form"
     )
     normalize.add_argument("files", nargs="*", help="input files, or '-' for stdin (default)")
+    normalize.add_argument(
+        "--only",
+        choices=["words", "sentences"],
+        help="apply only one pass: words (spellfix + hidden-space + whitespace collapse) "
+        "or sentences (Khmer sentence-stop spacing, lexicon-free); default: both",
+    )
     _add_include_option(normalize)
     normalize.set_defaults(func=_cmd_normalize)
 
