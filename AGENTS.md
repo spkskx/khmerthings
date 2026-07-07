@@ -19,9 +19,13 @@ Deterministic Khmer language tools in Python. Note: the repo directory is
   Data files under `src/khmerthings/data/`:
   `words.txt` (core), `names.txt` (names, surnames, titles), `modern.txt`
   (slang, informal, loanwords, trending), `variants.txt` (misspelling→
-  canonical map, two tab-separated columns). All are growable; the word
-  files merge via `load_lexicon(*sources)` and the variants map loads via
-  `load_variants()` (its keys double as the `variants` lexicon source).
+  canonical map, two tab-separated columns), `stopwords.txt` (function
+  words→category, two tab-separated columns, for the condenser). All are
+  growable; the word files merge via `load_lexicon(*sources)`, the variants
+  map loads via `load_variants()` (its keys double as the `variants` lexicon
+  source), and the stopword map loads via `load_stopwords()` (word→one of
+  `STOPWORD_CATEGORIES`; every stopword must also be a real word in the word
+  files, enforced by tests).
 - **Zero runtime dependencies.** Stdlib only. Dev tools (pytest, ruff, mypy)
   are the only allowed dependencies.
 - **Tests are the top priority.** Every module ships with table-driven unit
@@ -78,13 +82,22 @@ considering any change done.
    `mark_boundaries`), collapsed/trimmed whitespace elsewhere, and Khmer
    sentence-stop spacing (no space before ។/៕, one space after, via the
    `chars.is_khmer_sentence_stop` primitive). Idempotent.
-10. `cli.py` — argparse subcommands, one per tool (`khmerthings count ...`,
+10. `condense.py` — content-word extractor (`content_words`,
+    `condense_text`, `content_tokens`). *Lossy* — the only tool that does
+    not reproduce its input. Tokenizes against the caller's lexicon unioned
+    with every stopword (`_content_lexicon`), drops punctuation/whitespace
+    and any Khmer word whose stopword category is in the active `remove` set
+    (`DEFAULT_REMOVE` keeps the intent-bearing categories pronoun/auxiliary/
+    question). Feeds the planned intent detector.
+11. `cli.py` — argparse subcommands, one per tool (`khmerthings count ...`,
     `khmerthings segment ...`, `khmerthings sort ...`,
     `khmerthings spellcheck ...` (exit 1 = issues found),
-    `khmerthings spellfix ...`, `khmerthings normalize ...`).
+    `khmerthings spellfix ...`, `khmerthings normalize ...`,
+    `khmerthings condense ...` (`--words`, `--remove`)).
 
-Planned tools (POS tagger, intent detector, paragraph categorizer) follow
-the same pattern:
+Planned tools (intent detector — over the condenser's content words —
+paragraph categorizer) follow the same pattern. (A POS tagger is *not*
+planned: content extraction uses the curated stoplist, not POS inference.)
 new module in `src/khmerthings/`, re-export in `__init__.py`, new CLI
 subcommand in `cli.py`, new `tests/test_<module>.py`, and a
 **per-tool document `docs/<tool>.md`** (see below).
@@ -154,5 +167,11 @@ change — not as an afterthought:
   stay canonical). Tests enforce that every canonical exists in the word
   files and that no variant key is itself a canonical entry (so legitimate
   name spellings such as ចំរើន can never be listed as misspellings).
+- `stopwords.txt`: one `word<TAB>category` mapping per line, grouped by
+  category. Category must be in `STOPWORD_CATEGORIES`; the word must be a
+  real entry in the word files (tests enforce). Keep the list conservative —
+  omit verb/preposition-ambiguous words (ទៅ, មក, ណា) rather than risk
+  stripping content. Adding a word here classifies it; it does not add a new
+  spelling.
 - Khmer test strings: verify codepoints carefully (visually identical strings
   can differ, e.g. ្ត vs ្ដ); assert exact expected values, hand-verified.

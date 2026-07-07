@@ -23,6 +23,7 @@ its own detailed document:
 | **Spellchecker** — find Khmer misspellings & unknown words | `khmerthings spellcheck` | `check_spelling` | [docs/spellcheck.md](docs/spellcheck.md) |
 | **Spellfixer** — rewrite known misspellings to canonical | `khmerthings spellfix` | `fix_spelling` | [docs/spellfix.md](docs/spellfix.md) |
 | **Normalizer** — spellfix + re-space into clean, ready-to-use text | `khmerthings normalize` | `normalize_text` | [docs/normalize.md](docs/normalize.md) |
+| **Condenser** — strip function words, keep only content words | `khmerthings condense` | `condense_text`, `content_words` | [docs/condense.md](docs/condense.md) |
 
 ## Install
 
@@ -54,13 +55,15 @@ fix_spelling("ខ្ញុំសំរាប់ការងារ")             
 - **Self-contained**: zero runtime dependencies; all word data is our own
   hand-curated set of growable wordlists — `words` (core vocabulary),
   `names` (people's names & titles), `modern` (slang, loanwords, trending
-  terms), and `variants` (common misspellings mapped to their canonical
-  spelling) — 1,895 entries and growing, each verified entry by entry; no
+  terms), `variants` (common misspellings mapped to their canonical
+  spelling), and `stopwords` (function words tagged by category, for the
+  condenser) — 1,900+ entries and growing, each verified entry by entry; no
   wordlist is imported wholesale.
 - **Lossless**: no character is ever dropped — unknown Khmer spans are
-  reported, not discarded.
+  reported, not discarded. (The one exception is the condenser, which is
+  lossy by design — it *removes* function words.)
 - **Tested first**: every module ships with table-driven unit tests and
-  invariant checks (332 tests and growing).
+  invariant checks (386 tests and growing).
 
 Under the hood, the tools share deterministic primitives (character
 classification, character-cluster segmentation, a cluster-keyed lexicon
@@ -70,12 +73,13 @@ docstrings if you want to build on them directly.
 ## Roadmap
 
 - ✅ Word counter, line sorter, word breaker, spellchecker & spellfixer,
-  normalizer
+  normalizer, condenser (content-word extraction)
 - ⏳ Wordlist growth across all four sources (`words`, `names`, `modern`,
-  `variants`) — hand-curated batches each release; the accuracy lever for
-  every dictionary-based tool, including the spellchecker's verdicts,
-  suggestions, and fixes
-- Later: part-of-speech tagger, intent detection, paragraph categorization
+  `variants`) plus the condenser's `stopwords` list — hand-curated batches
+  each release; the accuracy lever for every dictionary-based tool, including
+  the spellchecker's verdicts, suggestions, and fixes
+- Later: intent detection (built on the condenser's content words),
+  paragraph categorization
 
 ## Contributing
 

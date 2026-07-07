@@ -15,7 +15,34 @@ from importlib import resources
 from khmerthings.chars import ZERO_WIDTH_SPACE, is_khmer_letter_or_mark
 from khmerthings.clusters import segment_clusters
 
-__all__ = ["WORD_SOURCES", "Lexicon", "default_lexicon", "load_lexicon", "load_variants"]
+__all__ = [
+    "STOPWORD_CATEGORIES",
+    "WORD_SOURCES",
+    "Lexicon",
+    "default_lexicon",
+    "load_lexicon",
+    "load_stopwords",
+    "load_variants",
+]
+
+#: Closed set of stopword categories used by ``stopwords.txt`` and the
+#: :mod:`khmerthings.condense` content-word extractor.
+STOPWORD_CATEGORIES: frozenset[str] = frozenset(
+    {
+        "particle",
+        "politeness",
+        "filler",
+        "preposition",
+        "conjunction",
+        "demonstrative",
+        "pronoun",
+        "auxiliary",
+        "question",
+    }
+)
+
+#: Filename of the two-column stopword data file (word<TAB>category).
+_STOPWORDS_FILE = "stopwords.txt"
 
 #: Built-in wordlist sources shipped with the package. Each is an
 #: independently curated, growable data file under ``khmerthings/data/``:
@@ -179,6 +206,48 @@ def parse_variants(lines: Iterable[str]) -> dict[str, str]:
             raise ValueError(
                 f"canonical {canonical!r} (for variant {variant!r}) is itself listed as a variant"
             )
+    return mapping
+
+
+@cache
+def load_stopwords() -> dict[str, str]:
+    """Load the built-in stopword → category map.
+
+    The ``stopwords.txt`` data file has one entry per line as
+    ``word<TAB>category``; blank lines and ``#`` comments are ignored. The
+    word must be NFC-normalized Khmer text and the category one of
+    :data:`STOPWORD_CATEGORIES`; duplicate words are a load error. The
+    returned dict is the classification table for
+    :mod:`khmerthings.condense`.
+
+    >>> load_stopwords()["ទេ"]
+    'particle'
+    """
+    text = (resources.files("khmerthings") / "data" / _STOPWORDS_FILE).read_text("utf-8")
+    return parse_stopwords(text.splitlines())
+
+
+def parse_stopwords(lines: Iterable[str]) -> dict[str, str]:
+    """Parse and validate stopword-mapping lines (see :func:`load_stopwords`)."""
+    mapping: dict[str, str] = {}
+    for raw in lines:
+        line = raw.strip().strip(ZERO_WIDTH_SPACE)
+        if not line or line.startswith("#"):
+            continue
+        word, sep, category = line.partition("\t")
+        word = word.strip().strip(ZERO_WIDTH_SPACE)
+        category = category.strip()
+        if not sep or not word or not category:
+            raise ValueError(f"malformed stopwords line (want 'word<TAB>category'): {raw!r}")
+        _check_khmer_nfc(word, "stopword", raw)
+        if category not in STOPWORD_CATEGORIES:
+            raise ValueError(
+                f"unknown stopword category {category!r} (allowed: "
+                f"{', '.join(sorted(STOPWORD_CATEGORIES))}) in line: {raw!r}"
+            )
+        if word in mapping:
+            raise ValueError(f"duplicate stopword: {word!r}")
+        mapping[word] = category
     return mapping
 
 

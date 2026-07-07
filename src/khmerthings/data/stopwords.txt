@@ -1,0 +1,100 @@
+# khmerthings stopword lexicon: function words tagged by category, for the
+# `condense` content-word extractor. One entry per line, two tab-separated
+# columns: word<TAB>category. UTF-8, NFC, Khmer letters/marks only. Blank
+# lines and '#' comments are ignored.
+#
+# Every word here must also appear in one of the word files
+# (words/names/modern) — a stopword is a real word we choose to strip, not a
+# new spelling (enforced by tests). Categories are a closed set (see
+# STOPWORD_CATEGORIES in condense.py).
+#
+# The categories split into two intent-relevant groups:
+#   - Stripped by default (low information for intent): particle, politeness,
+#     filler, preposition, conjunction, demonstrative.
+#   - Kept by default (they carry intent and are only removed on request):
+#     pronoun, auxiliary, question.
+# This list is deliberately conservative — verb/preposition-ambiguous words
+# (ទៅ "go"/to, មក "come"/toward, ណា "which"/softener) are left out rather than
+# risk stripping content.
+
+# --- final & modal particles ---
+ទេ	particle
+ដែរ	particle
+ផង	particle
+ផងដែរ	particle
+សិន	particle
+ចុះ	particle
+ឡើយ	particle
+ក៏	particle
+ត្រឹម	particle
+ប៉ុណ្ណោះ	particle
+តើ	particle
+
+# --- politeness markers ---
+បាទ	politeness
+ចាស	politeness
+
+# --- discourse fillers ---
+គឺ	filler
+អញ្ចឹង	filler
+ចឹង	filler
+ម៉ង	filler
+
+# --- prepositions ---
+នៅ	preposition
+របស់	preposition
+នៃ	preposition
+ក្នុង	preposition
+លើ	preposition
+ក្រោម	preposition
+ពី	preposition
+ដល់	preposition
+ដោយ	preposition
+សម្រាប់	preposition
+អំពី	preposition
+ចំពោះ	preposition
+តាម	preposition
+
+# --- conjunctions ---
+និង	conjunction
+ហើយ	conjunction
+ឬ	conjunction
+តែ	conjunction
+ប៉ុន្តែ	conjunction
+ព្រោះ	conjunction
+បើ	conjunction
+ថា	conjunction
+ដែល	conjunction
+
+# --- demonstratives ---
+នេះ	demonstrative
+នោះ	demonstrative
+
+# --- pronouns (kept by default) ---
+ខ្ញុំ	pronoun
+អ្នក	pronoun
+គាត់	pronoun
+គេ	pronoun
+យើង	pronoun
+វា	pronoun
+នាង	pronoun
+ពួកគេ	pronoun
+ពួកយើង	pronoun
+លោក	pronoun
+លោកស្រី	pronoun
+
+# --- auxiliaries & modals (kept by default: intent signals) ---
+បាន	auxiliary
+នឹង	auxiliary
+ត្រូវ	auxiliary
+កំពុង	auxiliary
+គួរ	auxiliary
+អាច	auxiliary
+ចង់	auxiliary
+
+# --- question words (kept by default: signal intent type) ---
+អ្វី	question
+ម្តេច	question
+ម៉េច	question
+ប៉ុន្មាន	question
+នរណា	question

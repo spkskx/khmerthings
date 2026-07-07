@@ -12,8 +12,9 @@ import sys
 from collections.abc import Sequence
 
 from khmerthings import __version__
+from khmerthings.condense import DEFAULT_REMOVE, condense_text, content_words
 from khmerthings.counter import analyze
-from khmerthings.lexicon import WORD_SOURCES, Lexicon, load_lexicon
+from khmerthings.lexicon import STOPWORD_CATEGORIES, WORD_SOURCES, Lexicon, load_lexicon
 from khmerthings.normalize import normalize_text
 from khmerthings.segmenter import break_words, mark_boundaries
 from khmerthings.sorting import sort_lines
@@ -146,6 +147,24 @@ def _cmd_normalize(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_condense(args: argparse.Namespace) -> int:
+    paths: list[str] = args.files or ["-"]
+    lexicon = _lexicon_from_args(args)
+    if args.remove is not None:
+        remove = frozenset(s.strip() for s in args.remove.split(",") if s.strip())
+    else:
+        remove = DEFAULT_REMOVE
+    for path in paths:
+        _, text = _read_source(path)
+        for line in text.splitlines():
+            if args.words:
+                for word in content_words(line, lexicon, remove=remove):
+                    print(word)
+            else:
+                print(condense_text(line, lexicon, remove=remove))
+    return 0
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="khmerthings",
@@ -204,6 +223,30 @@ def _build_parser() -> argparse.ArgumentParser:
     normalize.add_argument("files", nargs="*", help="input files, or '-' for stdin (default)")
     _add_include_option(normalize)
     normalize.set_defaults(func=_cmd_normalize)
+
+    condense = subparsers.add_parser(
+        "condense",
+        help="strip function words, keeping only content (meaning-bearing) words",
+    )
+    condense.add_argument("files", nargs="*", help="input files, or '-' for stdin (default)")
+    condense.add_argument(
+        "--remove",
+        metavar="CAT,CAT",
+        help=(
+            "stopword categories to strip, comma-separated (default: "
+            + ",".join(sorted(DEFAULT_REMOVE))
+            + "; all: "
+            + ",".join(sorted(STOPWORD_CATEGORIES))
+            + ")"
+        ),
+    )
+    condense.add_argument(
+        "--words",
+        action="store_true",
+        help="output one content word per line instead of the condensed line",
+    )
+    _add_include_option(condense)
+    condense.set_defaults(func=_cmd_condense)
 
     sort = subparsers.add_parser(
         "sort", help="sort lines in Khmer dictionary order (ascending by default)"

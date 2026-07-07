@@ -57,3 +57,8 @@
 # --- more loanwords ---
 ឌីជីថល
 បាក់ឌុប
+
+# === batch 5 (2026-07-07) ===
+# --- colloquial discourse fillers ---
+អញ្ចឹង
+ចឹង

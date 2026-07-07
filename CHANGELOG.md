@@ -7,8 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-07-07
+
 ### Added
 
+- Condenser tool (`condense.py`): `content_words()` / `condense_text()` /
+  `content_tokens()` strip function words (stopwords) from text, keeping only
+  content (meaning-bearing) words — the content-extraction stage for
+  downstream intent analysis. Backed by a new curated `stopwords.txt` data
+  file (`word<TAB>category`, nine categories) and `load_stopwords()` /
+  `STOPWORD_CATEGORIES` in `lexicon.py`. Removes the low-information
+  categories by default (`DEFAULT_REMOVE`: particle, politeness, filler,
+  preposition, conjunction, demonstrative) and keeps the intent-bearing ones
+  (pronoun, auxiliary, question) unless asked; tunable via `remove=` /
+  `--remove`. New CLI subcommand `khmerthings condense` (files/stdin,
+  `--words`, `--remove`, `--include`). Lossy by design — the only
+  khmerthings tool that does not reproduce its input. Documented in
+  `docs/condense.md`.
+- Stoplist coverage for common function words found in real news/chat text:
+  `របស់`, `នៃ` (prepositions); `ក៏`, `ត្រឹម`, `ប៉ុណ្ណោះ`, `ផងដែរ`, `តើ`
+  (particles).
+- Lexicon additions for the stoplist: `ម្តេច`, `តើ` (words), `អញ្ចឹង`, `ចឹង`
+  (modern colloquial fillers).
 - Community health files: `CODE_OF_CONDUCT.md`, `CONTRIBUTING.md`,
   `SECURITY.md`, and GitHub issue templates (bug report, feature request,
   wordlist addition) under `.github/ISSUE_TEMPLATE/`.

@@ -56,14 +56,15 @@ a change is done — CI enforces exactly these on every PR.
 ## Adding a new tool
 
 Follow the existing bottom-up architecture (chars → clusters → lexicon →
-tokenizer → tools). To add a tool, e.g. a POS tagger:
+tokenizer → tools). To add a tool, e.g. an intent detector:
 
-1. Create `src/khmerthings/postag.py`, building on the existing
-   primitives (`segment_clusters`, `Lexicon.longest_match`, `tokenize`).
+1. Create `src/khmerthings/intent.py`, building on the existing
+   primitives (`segment_clusters`, `Lexicon.longest_match`, `tokenize`,
+   and — for meaning-only input — `content_words`).
 2. Re-export the public API in `src/khmerthings/__init__.py` (`__all__`).
-3. Add a CLI subcommand in `src/khmerthings/cli.py` (`khmerthings postag`).
-4. Add `tests/test_postag.py` with unit + invariant tests.
-5. Write its per-tool document `docs/postag.md` following the shared
+3. Add a CLI subcommand in `src/khmerthings/cli.py` (`khmerthings intent`).
+4. Add `tests/test_intent.py` with unit + invariant tests.
+5. Write its per-tool document `docs/intent.md` following the shared
    template used by the existing docs (What it does / Quick start / CLI
    reference / Python API / How it works / Guarantees & limitations /
    Related tools). All example outputs must be real, verified outputs.
@@ -71,7 +72,9 @@ tokenizer → tools). To add a tool, e.g. a POS tagger:
 
 ## Editing the wordlists (`src/khmerthings/data/`)
 
-Four growable files, merged on demand via `load_lexicon(*sources)`:
+Five growable files. The first four merge on demand via
+`load_lexicon(*sources)`; `stopwords.txt` loads separately via
+`load_stopwords()`:
 
 | File | Source name | Contents |
 |---|---|---|
@@ -79,6 +82,7 @@ Four growable files, merged on demand via `load_lexicon(*sources)`:
 | `names.txt` | `names` | personal names, surnames, honorific titles |
 | `modern.txt` | `modern` | slang, informal register, loanwords, trending terms |
 | `variants.txt` | `variants` | common misspellings → canonical spelling (two columns) |
+| `stopwords.txt` | — | function words → category, for the condenser (two columns); every word must also exist in the word files |
 
 Put new entries in the right file: standard dictionary vocabulary → `words`;
 anything people are called → `names`; register that shifts with time

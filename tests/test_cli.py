@@ -202,6 +202,26 @@ class TestMain:
         assert main(["spellfix", str(f)]) == 0
         assert capsys.readouterr().out == SENTENCE + "\n"
 
+    def test_condense_default(self, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+        f = tmp_path / "text.txt"
+        f.write_text("ខ្ញុំចង់ទៅផ្សារនៅ\n", encoding="utf-8")
+        assert main(["condense", str(f)]) == 0
+        assert capsys.readouterr().out == "ខ្ញុំ​ចង់​ទៅ​ផ្សារ\n"
+
+    def test_condense_words_flag(self, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+        f = tmp_path / "text.txt"
+        f.write_text("ខ្ញុំចង់ទៅផ្សារនៅ\n", encoding="utf-8")
+        assert main(["condense", "--words", str(f)]) == 0
+        assert capsys.readouterr().out == "ខ្ញុំ\nចង់\nទៅ\nផ្សារ\n"
+
+    def test_condense_remove_categories(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        f = tmp_path / "text.txt"
+        f.write_text("ខ្ញុំចង់ទៅផ្សារនៅ\n", encoding="utf-8")
+        assert main(["condense", "--remove", "preposition,pronoun,auxiliary", str(f)]) == 0
+        assert capsys.readouterr().out == "ទៅ​ផ្សារ\n"
+
     def test_missing_file_is_a_clean_error(self, capsys: pytest.CaptureFixture[str]) -> None:
         assert main(["count", "/nonexistent/path.txt"]) == 1
         err = capsys.readouterr().err
