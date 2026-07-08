@@ -20,12 +20,15 @@ Deterministic Khmer language tools in Python. Note: the repo directory is
   `words.txt` (core), `names.txt` (names, surnames, titles), `modern.txt`
   (slang, informal, loanwords, trending), `variants.txt` (misspelling→
   canonical map, two tab-separated columns), `stopwords.txt` (function
-  words→category, two tab-separated columns, for the condenser). All are
-  growable; the word files merge via `load_lexicon(*sources)`, the variants
-  map loads via `load_variants()` (its keys double as the `variants` lexicon
-  source), and the stopword map loads via `load_stopwords()` (word→one of
-  `STOPWORD_CATEGORIES`; every stopword must also be a real word in the word
-  files, enforced by tests).
+  words→category, two tab-separated columns, for the condenser),
+  `romanize.txt` (Khmer word→Latin spelling, two tab-separated columns, for
+  the romanizer). All are growable; the word files merge via
+  `load_lexicon(*sources)`, the variants map loads via `load_variants()`
+  (its keys double as the `variants` lexicon source), the stopword map loads
+  via `load_stopwords()` (word→one of `STOPWORD_CATEGORIES`; every stopword
+  must also be a real word in the word files, enforced by tests), and the
+  romanization exception map loads via `load_romanizations()` (Khmer key must
+  be NFC/Khmer-only, Latin value ASCII).
 - **Zero runtime dependencies.** Stdlib only. Dev tools (pytest, ruff, mypy)
   are the only allowed dependencies.
 - **Tests are the top priority.** Every module ships with table-driven unit
@@ -91,13 +94,29 @@ considering any change done.
     and any Khmer word whose stopword category is in the active `remove` set
     (`DEFAULT_REMOVE` keeps the intent-bearing categories pronoun/auxiliary/
     question). Feeds the planned intent detector.
-11. `cli.py` — argparse subcommands, one per tool (`khmerthings count ...`,
+11. `romanize.py` — phonetic romanizer (`romanize`), UNGEGN-style. Tokenizes
+    against the caller's lexicon unioned with the romanization-exception keys
+    (`_exception_lexicon`); each Khmer word is looked up in the exception map
+    (`load_romanizations()`) first, else romanized cluster-by-cluster with a
+    register-aware (1st/2nd series) rule engine — subscripts form onset
+    clusters, dependent vowels read per register, a bare final consonant reads
+    as a coda, register shifters ៉/៊ flip the series. Khmer digits → Arabic;
+    non-Khmer passes through; adjacent Khmer words are space-separated.
+    *Phonetic, not reversible.*
+12. `numerals.py` — numeral tool (`arabic_to_khmer`, `khmer_to_arabic`,
+    `number_to_words`). Digit conversion is a pure `str.translate` over the
+    two 0–9 ranges (reversible on the digit subset); `number_to_words` spells
+    an integer via the recursive decimal-unit system (in-module tables, no
+    data file). No lexicon.
+13. `cli.py` — argparse subcommands, one per tool (`khmerthings count ...`,
     `khmerthings segment ...`, `khmerthings sort ...`,
     `khmerthings spellcheck ...` (exit 1 = issues found; `--only
     {variants,unknown}` runs a single detection kind),
     `khmerthings spellfix ...`,
     `khmerthings normalize ...` (`--only {words,sentences}` runs a single
-    pass), `khmerthings condense ...` (`--words`, `--remove`)).
+    pass), `khmerthings condense ...` (`--words`, `--remove`),
+    `khmerthings romanize ...`,
+    `khmerthings numerals ...` (`--to {khmer,arabic,words}`)).
 
 Planned tools (intent detector — over the condenser's content words —
 paragraph categorizer) follow the same pattern. (A POS tagger is *not*

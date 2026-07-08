@@ -8,14 +8,17 @@ from __future__ import annotations
 import argparse
 import dataclasses
 import json
+import re
 import sys
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 
 from khmerthings import __version__
 from khmerthings.condense import DEFAULT_REMOVE, condense_text, content_words
 from khmerthings.counter import analyze
 from khmerthings.lexicon import STOPWORD_CATEGORIES, WORD_SOURCES, Lexicon, load_lexicon
 from khmerthings.normalize import normalize_text, space_sentences, space_words
+from khmerthings.numerals import arabic_to_khmer, khmer_to_arabic, number_to_words
+from khmerthings.romanize import romanize
 from khmerthings.segmenter import break_words, mark_boundaries
 from khmerthings.sorting import sort_lines
 from khmerthings.spellcheck import (
@@ -187,6 +190,40 @@ def _cmd_condense(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_romanize(args: argparse.Namespace) -> int:
+    paths: list[str] = args.files or ["-"]
+    lexicon = _lexicon_from_args(args)
+    for path in paths:
+        _, text = _read_source(path)
+        for line in text.splitlines():
+            print(romanize(line, lexicon))
+    return 0
+
+
+#: A run of one or more digits, Arabic (0-9) or Khmer (០-៩).
+_NUMBER_RUN = re.compile(r"[0-9០-៩]+")
+
+
+def _spell_numbers(line: str) -> str:
+    return _NUMBER_RUN.sub(lambda m: number_to_words(int(khmer_to_arabic(m.group()))), line)
+
+
+def _cmd_numerals(args: argparse.Namespace) -> int:
+    paths: list[str] = args.files or ["-"]
+    convert: Callable[[str], str]
+    if args.to == "arabic":
+        convert = khmer_to_arabic
+    elif args.to == "words":
+        convert = _spell_numbers
+    else:
+        convert = arabic_to_khmer
+    for path in paths:
+        _, text = _read_source(path)
+        for line in text.splitlines():
+            print(convert(line))
+    return 0
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="khmerthings",
@@ -288,6 +325,25 @@ def _build_parser() -> argparse.ArgumentParser:
     sort.add_argument("files", nargs="*", help="input files, or '-' for stdin (default)")
     sort.add_argument("--desc", action="store_true", help="sort in descending order")
     sort.set_defaults(func=_cmd_sort)
+
+    romanize_p = subparsers.add_parser(
+        "romanize", help="phonetically romanize Khmer text into Latin (UNGEGN-style)"
+    )
+    romanize_p.add_argument("files", nargs="*", help="input files, or '-' for stdin (default)")
+    _add_include_option(romanize_p)
+    romanize_p.set_defaults(func=_cmd_romanize)
+
+    numerals = subparsers.add_parser(
+        "numerals", help="convert numbers between Khmer digits, Arabic digits, and Khmer words"
+    )
+    numerals.add_argument("files", nargs="*", help="input files, or '-' for stdin (default)")
+    numerals.add_argument(
+        "--to",
+        choices=["khmer", "arabic", "words"],
+        default="khmer",
+        help="target form: khmer digits (default), arabic digits, or spelled-out Khmer words",
+    )
+    numerals.set_defaults(func=_cmd_numerals)
 
     return parser
 

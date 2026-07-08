@@ -222,6 +222,46 @@ class TestMain:
         assert main(["condense", "--remove", "preposition,pronoun,auxiliary", str(f)]) == 0
         assert capsys.readouterr().out == "ទៅ​ផ្សារ\n"
 
+    def test_romanize_file(self, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+        f = tmp_path / "text.txt"
+        f.write_text("ភ្នំពេញ\n", encoding="utf-8")
+        assert main(["romanize", str(f)]) == 0
+        assert capsys.readouterr().out == "phnom penh\n"
+
+    def test_romanize_digits_and_passthrough(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        f = tmp_path / "text.txt"
+        f.write_text("hello ២០២៦\n", encoding="utf-8")
+        assert main(["romanize", str(f)]) == 0
+        assert capsys.readouterr().out == "hello 2026\n"
+
+    def test_numerals_to_khmer(self, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+        f = tmp_path / "text.txt"
+        f.write_text("42\n", encoding="utf-8")
+        assert main(["numerals", "--to", "khmer", str(f)]) == 0
+        assert capsys.readouterr().out == "៤២\n"
+
+    def test_numerals_to_arabic(self, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+        f = tmp_path / "text.txt"
+        f.write_text("១២៣ and 456\n", encoding="utf-8")
+        assert main(["numerals", "--to", "arabic", str(f)]) == 0
+        assert capsys.readouterr().out == "123 and 456\n"
+
+    def test_numerals_to_words(self, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+        f = tmp_path / "text.txt"
+        f.write_text("លេខ 25 នៅ\n", encoding="utf-8")
+        assert main(["numerals", "--to", "words", str(f)]) == 0
+        assert capsys.readouterr().out == "លេខ ម្ភៃប្រាំ នៅ\n"
+
+    def test_numerals_default_is_khmer(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        f = tmp_path / "text.txt"
+        f.write_text("2026\n", encoding="utf-8")
+        assert main(["numerals", str(f)]) == 0
+        assert capsys.readouterr().out == "២០២៦\n"
+
     def test_missing_file_is_a_clean_error(self, capsys: pytest.CaptureFixture[str]) -> None:
         assert main(["count", "/nonexistent/path.txt"]) == 1
         err = capsys.readouterr().err
@@ -299,6 +339,28 @@ class TestSubprocess:
         )
         assert proc.returncode == 0
         assert proc.stdout == "សម្រាប់\n"
+
+    def test_romanize_stdin(self) -> None:
+        proc = subprocess.run(
+            [sys.executable, "-m", "khmerthings", "romanize"],
+            input="ភ្នំពេញ\n",
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+        assert proc.returncode == 0
+        assert proc.stdout == "phnom penh\n"
+
+    def test_numerals_stdin(self) -> None:
+        proc = subprocess.run(
+            [sys.executable, "-m", "khmerthings", "numerals", "--to", "words"],
+            input="7\n",
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+        assert proc.returncode == 0
+        assert proc.stdout == "ប្រាំពីរ\n"
 
     def test_version(self) -> None:
         proc = subprocess.run(

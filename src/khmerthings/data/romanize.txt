@@ -1,0 +1,24 @@
+# Romanization exceptions: khmer<TAB>latin
+# Whole-word overrides for the phonetic rule engine — irregular words and
+# established Latin spellings (place names, loanwords). One mapping per line,
+# tab-separated. Keys are NFC Khmer; values are ASCII Latin.
+
+# Place names
+ភ្នំពេញ	phnom penh
+កម្ពុជា	kampuchea
+សៀមរាប	siem reap
+បាត់ដំបង	battambang
+កំពង់ចាម	kampong cham
+កំពត	kampot
+សីហនុ	sihanouk
+អង្គរ	angkor
+
+# Common words with established or irregular spellings
+ខ្មែរ	khmer
+រៀល	riel
+បាយ	bai
+អរគុណ	arkoun
+សួស្តី	suosdei
+បង	bong
+ស្រី	srey
+ទឹក	tuk

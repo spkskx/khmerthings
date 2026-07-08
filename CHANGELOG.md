@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Romanizer** (`khmerthings romanize` / `romanize`): phonetic UNGEGN-style
+  romanization of Khmer into Latin, using a register-aware (1st/2nd series)
+  rule engine over character clusters plus a curated whole-word exception
+  lexicon (`data/romanize.txt`, loaded by `load_romanizations()`). Phonetic
+  and not reversible. `docs/romanize.md`.
+- **Numerals** (`khmerthings numerals` with `--to {khmer,arabic,words}` /
+  `arabic_to_khmer`, `khmer_to_arabic`, `number_to_words`): Khmer⇄Arabic
+  digit conversion (reversible on the digit subset) and spelling integers out
+  in Khmer words via the decimal-unit system. `docs/numerals.md`.
+
 ## [0.10.0] - 2026-07-07
 
 ### Added

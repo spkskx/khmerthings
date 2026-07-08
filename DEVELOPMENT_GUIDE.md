@@ -83,6 +83,7 @@ Five growable files. The first four merge on demand via
 | `modern.txt` | `modern` | slang, informal register, loanwords, trending terms |
 | `variants.txt` | `variants` | common misspellings → canonical spelling (two columns) |
 | `stopwords.txt` | — | function words → category, for the condenser (two columns); every word must also exist in the word files |
+| `romanize.txt` | — | Khmer word → Latin spelling, for the romanizer (two columns); key is NFC Khmer, value is ASCII |
 
 Put new entries in the right file: standard dictionary vocabulary → `words`;
 anything people are called → `names`; register that shifts with time

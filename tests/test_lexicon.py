@@ -7,7 +7,9 @@ from khmerthings.lexicon import (
     Lexicon,
     default_lexicon,
     load_lexicon,
+    load_romanizations,
     load_variants,
+    parse_romanizations,
     parse_variants,
 )
 
@@ -195,3 +197,38 @@ class TestLoadVariants:
         assert "ព័ត៍មាន" in lex  # variant matches
         assert "ព័ត៌មាន" in lex  # canonical still matches
         assert "ព័ត៍មាន" not in load_lexicon("words")
+
+
+class TestParseRomanizations:
+    def test_basic_mapping(self) -> None:
+        mapping = parse_romanizations(["# comment", "", "ភ្នំពេញ\tphnom penh", "  ខ្មែរ\tkhmer  "])
+        assert mapping == {"ភ្នំពេញ": "phnom penh", "ខ្មែរ": "khmer"}
+
+    @pytest.mark.parametrize(
+        "line, match",
+        [
+            ("ភ្នំពេញ", "malformed romanize line"),
+            ("ភ្នំពេញ\t", "malformed romanize line"),
+            ("\tphnom", "malformed romanize line"),
+            ("phnom\tpenh", "non-Khmer characters"),
+            ("ខ្មែរ\tខ្មែរ", "not ASCII"),
+        ],
+    )
+    def test_bad_lines_rejected(self, line: str, match: str) -> None:
+        with pytest.raises(ValueError, match=match):
+            parse_romanizations([line])
+
+    def test_duplicate_key_rejected(self) -> None:
+        with pytest.raises(ValueError, match="duplicate romanization key"):
+            parse_romanizations(["ខ្មែរ\tkhmer", "ខ្មែរ\tkhmae"])
+
+
+class TestLoadRomanizations:
+    def test_loads_and_is_cached(self) -> None:
+        mapping = load_romanizations()
+        assert mapping is load_romanizations()
+        assert mapping["ភ្នំពេញ"] == "phnom penh"
+
+    def test_all_values_ascii(self) -> None:
+        for latin in load_romanizations().values():
+            assert latin.isascii() and latin == latin.strip() and latin
