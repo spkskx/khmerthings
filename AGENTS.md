@@ -93,7 +93,7 @@ considering any change done.
     with every stopword (`_content_lexicon`), drops punctuation/whitespace
     and any Khmer word whose stopword category is in the active `remove` set
     (`DEFAULT_REMOVE` keeps the intent-bearing categories pronoun/auxiliary/
-    question). Feeds the planned intent detector.
+    question).
 11. `romanize.py` — phonetic romanizer (`romanize`), UNGEGN-style. Tokenizes
     against the caller's lexicon unioned with the romanization-exception keys
     (`_exception_lexicon`); each Khmer word is looked up in the exception map
@@ -118,12 +118,16 @@ considering any change done.
     `khmerthings romanize ...`,
     `khmerthings numerals ...` (`--to {khmer,arabic,words}`)).
 
-Planned tools (intent detector — over the condenser's content words —
-paragraph categorizer) follow the same pattern. (A POS tagger is *not*
-planned: content extraction uses the curated stoplist, not POS inference.)
-new module in `src/khmerthings/`, re-export in `__init__.py`, new CLI
-subcommand in `cli.py`, new `tests/test_<module>.py`, and a
-**per-tool document `docs/<tool>.md`** (see below).
+The deterministic tool surface is **complete and frozen**; the current phase
+is consolidation (data depth + correctness hardening), not new tools.
+Semantic/understanding-level NLP is deliberately *not* planned — intent
+detection, paragraph categorization, and a POS tagger would all require
+probabilistic inference, which conflicts with the determinism guarantee;
+content extraction uses the curated stoplist instead. Should a new
+*deterministic* tool ever be added, it follows the established pattern: new
+module in `src/khmerthings/`, re-export in `__init__.py`, new CLI subcommand in
+`cli.py`, new `tests/test_<module>.py`, and a **per-tool document
+`docs/<tool>.md`** (see below).
 
 ## Invariants to preserve (enforced by tests)
 

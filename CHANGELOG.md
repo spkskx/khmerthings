@@ -19,6 +19,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   digit conversion (reversible on the digit subset) and spelling integers out
   in Khmer words via the decimal-unit system. `docs/numerals.md`.
 
+### Changed
+
+- **Roadmap: the deterministic tool surface is now considered complete and
+  frozen.** Focus shifts to consolidation — data depth and correctness
+  hardening — rather than new tools. Intent detection and paragraph
+  categorization, previously listed as future tools, are **removed from the
+  roadmap**: like a POS tagger, they would require probabilistic inference and
+  conflict with the determinism guarantee. No code or public API changes.
+
+### Fixed
+
+- **Romanizer:** corrected two common stop+sonorant words the rule engine got
+  wrong (it derives register from the last onset consonant, so the sonorant
+  wrongly flips the series): `ក្រុង` now romanizes as `krong` (was `krung`) and
+  `ប្រាំ` as `pram` (was `bream`), via curated `data/romanize.txt` exceptions.
+
+### Development
+
+- Added a coverage-gap harness (`scripts/coverage_gaps.py`): reports the
+  `KHMER_UNKNOWN` spans in arbitrary text, ranked by frequency, as an
+  evidence-driven backlog for wordlist curation.
+- Added a hot-path benchmark (`scripts/benchmark.py`) timing cluster
+  segmentation, longest-match tokenization, and edit-distance spell checking,
+  as a baseline guard for any future optimization.
+- Expanded regression coverage: a broad known-answer table for the romanizer's
+  rule engine (initials, dependent vowels per register, codas, signs,
+  subscripts, independent vowels), whole-file data-integrity checks over every
+  `data/*.txt` file, and cross-file invariants (stopwords are real words,
+  variant keys are not stopwords).
+
 ## [0.10.0] - 2026-07-07
 
 ### Added

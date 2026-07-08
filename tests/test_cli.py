@@ -273,6 +273,45 @@ class TestMain:
         assert exc.value.code == 2
 
 
+SUBCOMMANDS = [
+    "count",
+    "segment",
+    "sort",
+    "spellcheck",
+    "spellfix",
+    "normalize",
+    "condense",
+    "romanize",
+    "numerals",
+]
+
+
+class TestInputParity:
+    """Every subcommand survives empty and non-Khmer input without crashing.
+
+    A degenerate input must exit 0 (success) — never raise, never error out.
+    ``spellcheck`` uses exit 1 only for *issues found*; empty/non-Khmer text
+    has none, so it too must be 0.
+    """
+
+    @pytest.mark.parametrize("sub", SUBCOMMANDS)
+    @pytest.mark.parametrize("content", ["", "\n", "hello world 123 !@#\n", "   "])
+    def test_degenerate_input_exits_zero(
+        self, sub: str, content: str, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        f = tmp_path / "in.txt"
+        f.write_text(content, encoding="utf-8")
+        assert main([sub, str(f)]) == 0
+        capsys.readouterr()  # drain
+
+    @pytest.mark.parametrize("sub", SUBCOMMANDS)
+    def test_missing_file_is_clean_error_for_every_subcommand(
+        self, sub: str, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        assert main([sub, "/nonexistent/path.txt"]) == 1
+        assert capsys.readouterr().err.startswith("khmerthings: error:")
+
+
 class TestSubprocess:
     def test_stdin(self) -> None:
         proc = subprocess.run(

@@ -149,9 +149,12 @@ load_romanizations()["ភ្នំពេញ"]
   cannot be transformed back into a unique Khmer spelling.
 - **An approximation.** The rule engine is a practical approximation of
   UNGEGN 1972 order, not a full phonological model — it does not resolve
-  every context-dependent vowel or final-consonant subtlety. The exception
-  lexicon exists precisely to correct words the rules get wrong; it grows
-  with no code changes.
+  every context-dependent vowel or final-consonant subtlety. One known
+  simplification: register is taken from the *last* onset consonant, so in a
+  stop+sonorant cluster (e.g. `ក្រ`, `ប្រ`) the sonorant can wrongly flip the
+  series. The exception lexicon exists precisely to correct words the rules
+  get wrong (e.g. `ក្រុង` → `krong`, `ប្រាំ` → `pram`); it grows with no code
+  changes.
 - **Non-Khmer is preserved.** Latin, numbers, and punctuation are copied
   through unchanged; Khmer digits are converted to Arabic.
 

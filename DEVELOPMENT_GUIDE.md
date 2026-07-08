@@ -55,16 +55,21 @@ a change is done — CI enforces exactly these on every PR.
 
 ## Adding a new tool
 
-Follow the existing bottom-up architecture (chars → clusters → lexicon →
-tokenizer → tools). To add a tool, e.g. an intent detector:
+The deterministic tool surface is complete and frozen — the current phase is
+consolidation, not new tools, and semantic tools (intent, categorization, POS)
+are out of scope (they'd need probabilistic inference). This section stays as
+the reference for the rare case of adding another *deterministic* tool.
 
-1. Create `src/khmerthings/intent.py`, building on the existing
+Follow the existing bottom-up architecture (chars → clusters → lexicon →
+tokenizer → tools). To add a tool, e.g. a hypothetical `foo`:
+
+1. Create `src/khmerthings/foo.py`, building on the existing
    primitives (`segment_clusters`, `Lexicon.longest_match`, `tokenize`,
    and — for meaning-only input — `content_words`).
 2. Re-export the public API in `src/khmerthings/__init__.py` (`__all__`).
-3. Add a CLI subcommand in `src/khmerthings/cli.py` (`khmerthings intent`).
-4. Add `tests/test_intent.py` with unit + invariant tests.
-5. Write its per-tool document `docs/intent.md` following the shared
+3. Add a CLI subcommand in `src/khmerthings/cli.py` (`khmerthings foo`).
+4. Add `tests/test_foo.py` with unit + invariant tests.
+5. Write its per-tool document `docs/foo.md` following the shared
    template used by the existing docs (What it does / Quick start / CLI
    reference / Python API / How it works / Guarantees & limitations /
    Related tools). All example outputs must be real, verified outputs.

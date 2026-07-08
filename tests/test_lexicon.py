@@ -1,13 +1,18 @@
+import unicodedata
+
 import pytest
 
+from khmerthings.chars import is_khmer_letter_or_mark
 from khmerthings.clusters import segment_clusters
 from khmerthings.clusters import segment_clusters as segment_clusters_for_match
 from khmerthings.lexicon import (
+    STOPWORD_CATEGORIES,
     WORD_SOURCES,
     Lexicon,
     default_lexicon,
     load_lexicon,
     load_romanizations,
+    load_stopwords,
     load_variants,
     parse_romanizations,
     parse_variants,
@@ -232,3 +237,52 @@ class TestLoadRomanizations:
     def test_all_values_ascii(self) -> None:
         for latin in load_romanizations().values():
             assert latin.isascii() and latin == latin.strip() and latin
+
+
+class TestShippedDataIntegrity:
+    """Whole-file guarantees over the real data files under ``data/``.
+
+    The per-file loaders already validate entries as they parse (NFC,
+    Khmer-only, uniqueness, category membership); these tests are the single
+    gate that *every* shipped file loads clean, plus the cross-file
+    invariants that no individual loader can see on its own.
+    """
+
+    def test_all_shipped_files_load_clean(self) -> None:
+        # One place that fails loudly if any shipped data file is malformed.
+        for source in WORD_SOURCES:
+            assert len(load_lexicon(source)) > 0
+        assert load_variants()
+        assert load_stopwords()
+        assert load_romanizations()
+
+    @pytest.mark.parametrize("source", sorted(WORD_SOURCES))
+    def test_word_source_entries_are_nfc_khmer(self, source: str) -> None:
+        # The loader enforces this on construction; assert it directly on the
+        # shipped data so a bad entry names the offending source.
+        for word in load_lexicon(source):
+            assert unicodedata.normalize("NFC", word) == word, f"{word!r} not NFC in {source}"
+            assert all(is_khmer_letter_or_mark(ch) for ch in word), (
+                f"{word!r} non-Khmer in {source}"
+            )
+
+    def test_every_stopword_is_a_real_word(self) -> None:
+        # A stopword classifies an existing word; it must never introduce a
+        # spelling absent from the word files (else the condenser would carry
+        # a "word" no tokenizer can produce).
+        merged = load_lexicon("words", "names", "modern")
+        for word in load_stopwords():
+            assert word in merged, f"stopword {word!r} is not in the word files"
+
+    def test_stopword_categories_are_known(self) -> None:
+        assert set(load_stopwords().values()) <= STOPWORD_CATEGORIES
+
+    def test_variant_keys_are_not_stopwords(self) -> None:
+        # A known misspelling and a function-word classification are disjoint
+        # roles; the same spelling must not appear as both.
+        assert not (set(load_variants()) & set(load_stopwords()))
+
+    def test_romanization_keys_are_khmer_nfc(self) -> None:
+        for khmer in load_romanizations():
+            assert unicodedata.normalize("NFC", khmer) == khmer
+            assert all(is_khmer_letter_or_mark(ch) for ch in khmer)

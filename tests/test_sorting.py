@@ -54,6 +54,35 @@ class TestKhmerSortKey:
         assert sort_lines([a, b]) == sort_lines([b, a])
 
 
+class TestChuonNathDepth:
+    """Deeper dictionary-order cases: subscript stacks, signs, vowel blocks."""
+
+    def test_independent_vowels_sort_after_consonants(self) -> None:
+        # Independent vowels (ឥ…) live in the Unicode vowel block, above every
+        # consonant, so they sort after all consonant-initial words.
+        assert sort_lines(["ឥ", "អ", "ក", "ហ"]) == ["ក", "ហ", "អ", "ឥ"]
+
+    def test_subscript_stack_depth(self) -> None:
+        # Bare base first; then ordered by subscript consonant. ត < រ, and a
+        # shorter subscript run precedes its own extension.
+        assert sort_lines(["ស្ត្រ", "ស្ត", "ស្រ", "ស"]) == ["ស", "ស្ត", "ស្ត្រ", "ស្រ"]
+
+    def test_subscript_ordered_by_second_consonant(self) -> None:
+        assert sort_lines(["ក្ត", "ក្រ", "ក្ក"]) == ["ក្ក", "ក្ត", "ក្រ"]
+
+    def test_base_then_vowel_then_subscript(self) -> None:
+        # ក < កក (second cluster) < កា (vowel) < កៅ (later vowel) < ក្រ (subscript last)
+        assert sort_lines(["ក្រ", "កា", "ក", "កៅ", "កក"]) == ["ក", "កក", "កា", "កៅ", "ក្រ"]
+
+    def test_signs_ordered_after_vowel_by_codepoint(self) -> None:
+        # ំ (U+17C6) < ះ (U+17C7); both sort after the plain vowel.
+        assert sort_lines(["កា", "កាំ", "កាះ", "ក"]) == ["ក", "កា", "កាំ", "កាះ"]
+
+    def test_khmer_digits_sort_after_letters(self) -> None:
+        # Khmer digits are above the consonant block; ASCII stays first.
+        assert sort_lines(["១", "ក", "a", "0"]) == ["0", "a", "ក", "១"]
+
+
 class TestSortLines:
     def test_ascending_default(self) -> None:
         assert sort_lines(["ខ", "ក", "គ"]) == ["ក", "ខ", "គ"]

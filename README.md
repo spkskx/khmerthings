@@ -77,14 +77,23 @@ docstrings if you want to build on them directly.
 
 ## Roadmap
 
+The deterministic tool surface is **complete and frozen** — the focus now is
+depth, not breadth: growing the data and hardening what's already here.
+
 - ✅ Word counter, line sorter, word breaker, spellchecker & spellfixer,
   normalizer, condenser (content-word extraction), romanizer, numerals
 - ⏳ Wordlist growth across all four sources (`words`, `names`, `modern`,
   `variants`) plus the condenser's `stopwords` list — hand-curated batches
   each release; the accuracy lever for every dictionary-based tool, including
   the spellchecker's verdicts, suggestions, and fixes
-- Later: intent detection (built on the condenser's content words),
-  paragraph categorization
+- ⏳ Quality & correctness — known-answer regression suites for the romanizer
+  and sorter, invariant/edge-case hardening, and profiling of the hot paths
+
+**Out of scope / not planned:** semantic ("understanding-level") NLP that
+would require probabilistic models — intent detection, paragraph
+categorization, and POS tagging are intentionally *not* on the roadmap. They
+conflict with the determinism guarantee; content extraction uses the curated
+stoplist instead.
 
 ## Contributing
 
