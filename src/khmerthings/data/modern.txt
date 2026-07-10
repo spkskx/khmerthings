@@ -62,3 +62,7 @@
 # --- colloquial discourse fillers ---
 អញ្ចឹង
 ចឹង
+
+# === batch 6 (2026-07-10): segmentation coverage ===
+# --- science & environment loanwords ---
+អេកូឡូស៊ី

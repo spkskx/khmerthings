@@ -33,7 +33,7 @@ from khmerthings.spellcheck import (
 )
 from khmerthings.tokenizer import Token, TokenType, tokenize
 
-__version__ = "0.11.0"
+__version__ = "0.12.0"
 
 __all__ = [
     "DEFAULT_REMOVE",

@@ -396,3 +396,9 @@
 ភារ៉ា
 # --- more honorific titles ---
 តេជោ
+
+# === batch 5 (2026-07-10): segmentation coverage ===
+# --- family names ---
+ថោ
+# --- given names ---
+ឌីប៉ូឡា

@@ -3,7 +3,7 @@ import unicodedata
 import pytest
 
 from khmerthings.counter import count_words
-from khmerthings.lexicon import Lexicon
+from khmerthings.lexicon import Lexicon, load_lexicon
 from khmerthings.segmenter import break_words, mark_boundaries
 
 ZWSP = "​"
@@ -81,3 +81,48 @@ class TestMarkBoundaries:
     def test_deterministic(self) -> None:
         text = "ខ្ញុំទៅសាលារៀនជាមួយមិត្ត"
         assert mark_boundaries(text) == mark_boundaries(text)
+
+
+class TestLexiconCoverage:
+    """Regression tests: whole words that used to fragment into shorter
+    matches because they were missing from the lexicon (batch-5 additions).
+    """
+
+    @pytest.mark.parametrize(
+        "word",
+        [
+            # originally reported
+            "យោងតាម",
+            "ឧតុនិយម",
+            "គូស",
+            "អាជីវកម្ម",
+            "ហួស",
+            # other misses from the same sample
+            "ផលវិបាក",
+            "អវិជ្ជមាន",
+            "បាក់ច្រាំង",
+            "ខូចខាត",
+            "ហានិភ័យ",
+            "ជាតិ",
+            "ចំណោម",
+            "កត្តា",
+            "អគ្គនាយកដ្ឋាន",
+            "ទាំងស្រុង",
+        ],
+    )
+    def test_word_stays_whole(self, word: str) -> None:
+        # default lexicon = the "words" source only
+        assert break_words(word) == [word]
+
+    def test_names_stay_whole(self) -> None:
+        lex = load_lexicon("words", "names")
+        assert break_words("ថោ", lex) == ["ថោ"]
+        assert break_words("ឌីប៉ូឡា", lex) == ["ឌីប៉ូឡា"]
+
+    def test_modern_loanword_stays_whole(self) -> None:
+        lex = load_lexicon("words", "modern")
+        assert break_words("អេកូឡូស៊ី", lex) == ["អេកូឡូស៊ី"]
+
+    def test_reported_word_in_context(self) -> None:
+        # "បានគូសបញ្ជាក់" used to strand គូ + ស; now គូស is one word.
+        assert break_words("បានគូសបញ្ជាក់") == ["បាន", "គូស", "បញ្ជាក់"]

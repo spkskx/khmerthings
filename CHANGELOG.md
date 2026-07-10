@@ -7,17 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
-- **Romanizer** (`khmerthings romanize` / `romanize`): phonetic UNGEGN-style
-  romanization of Khmer into Latin, using a register-aware (1st/2nd series)
-  rule engine over character clusters plus a curated whole-word exception
-  lexicon (`data/romanize.txt`, loaded by `load_romanizations()`). Phonetic
-  and not reversible. `docs/romanize.md`.
-- **Numerals** (`khmerthings numerals` with `--to {khmer,arabic,words}` /
-  `arabic_to_khmer`, `khmer_to_arabic`, `number_to_words`): Khmer⇄Arabic
-  digit conversion (reversible on the digit subset) and spelling integers out
-  in Khmer words via the decimal-unit system. `docs/numerals.md`.
+## [0.12.0] - 2026-07-10
 
 ### Changed
 
@@ -34,6 +24,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   wrong (it derives register from the last onset consonant, so the sonorant
   wrongly flips the series): `ក្រុង` now romanizes as `krong` (was `krung`) and
   `ប្រាំ` as `pram` (was `bream`), via curated `data/romanize.txt` exceptions.
+- **Word breaker:** whole words that were missing from the lexicon no longer
+  fragment into shorter matches (the segmenter uses greedy longest-match, so
+  segmentation quality is bounded by lexicon coverage — this was a data gap,
+  not an algorithm bug). Added the missing entries, e.g. `គូស`, `ហួស`,
+  `យោងតាម`, `ឧតុនិយម`, `អាជីវកម្ម`, `ផលវិបាក`, `អវិជ្ជមាន`, `បាក់ច្រាំង`,
+  `ហានិភ័យ`, `ជាតិ`, `កត្តា`, `អគ្គនាយកដ្ឋាន` (batch-5 vocabulary), so they now
+  segment as single words.
 
 ### Development
 
@@ -48,6 +45,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   subscripts, independent vowels), whole-file data-integrity checks over every
   `data/*.txt` file, and cross-file invariants (stopwords are real words,
   variant keys are not stopwords).
+
+## [0.11.0] - 2026-07-08
+
+### Added
+
+- **Romanizer** (`khmerthings romanize` / `romanize`): phonetic UNGEGN-style
+  romanization of Khmer into Latin, using a register-aware (1st/2nd series)
+  rule engine over character clusters plus a curated whole-word exception
+  lexicon (`data/romanize.txt`, loaded by `load_romanizations()`). Phonetic
+  and not reversible. `docs/romanize.md`.
+- **Numerals** (`khmerthings numerals` with `--to {khmer,arabic,words}` /
+  `arabic_to_khmer`, `khmer_to_arabic`, `number_to_words`): Khmer⇄Arabic
+  digit conversion (reversible on the digit subset) and spelling integers out
+  in Khmer words via the decimal-unit system. `docs/numerals.md`.
 
 ## [0.10.0] - 2026-07-07
 
