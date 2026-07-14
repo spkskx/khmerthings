@@ -99,6 +99,20 @@ class TestDefaultLexicon:
     def test_contains_core_words(self, word: str) -> None:
         assert word in default_lexicon()
 
+    @pytest.mark.parametrize(
+        "word",
+        [
+            "អ្នកស្រែ",
+            "អ្នករាយការណ៍",
+            "ការរាយការណ៍",
+            "ភាពស្អាត",
+            "សេចក្តីស្រឡាញ់",
+            "សេចក្ដីស្រឡាញ់",
+        ],
+    )
+    def test_contains_common_derived_words(self, word: str) -> None:
+        assert word in default_lexicon()
+
     def test_all_entries_valid(self) -> None:
         # Re-validating via the constructor exercises every entry.
         Lexicon(list(default_lexicon()))
