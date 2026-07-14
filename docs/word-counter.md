@@ -247,5 +247,4 @@ dictionary. The counter then tallies the resulting tokens by type.
 
 - [Word breaker](word-breaker.md) — returns the words this tool counts.
 - [Line sorter](line-sorter.md) — Khmer dictionary-order sorting.
-- [Spellchecker](spellcheck.md) — investigate the words behind
   `unknown_khmer_words`.

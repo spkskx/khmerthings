@@ -20,8 +20,8 @@ from khmerthings import (
     normalize_text,
     segment_clusters,
     tokenize,
-    validate_orthography,
 )
+from khmerthings.orthography import validate_orthography
 from khmerthings.tokenizer import TokenType
 
 #: Adversarial inputs shared by every invariant below.

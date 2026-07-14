@@ -5,7 +5,7 @@
 Turns loosely-typed, raw Khmer text into clean, ready-to-use text in one
 pass. It composes three independently-callable, deterministic steps:
 
-1. **Spellfix** (`fix_spelling`, [spellfixer](spellfix.md)) — known
+1. **Spellfix** (`fix_spelling`, internal spelling correction pass) — known
    misspellings from the hand-curated variants map are rewritten to their
    canonical spelling.
 2. **Hidden-space placement** (`space_words`) — a zero-width space (U+200B)
@@ -138,7 +138,6 @@ $ echo "សុខាដារ៉ាឡូយណាស់" | khmerthings normaliz
 ### `space_words(text, lexicon=None) -> str`
 
 Only the hidden-space/whitespace pass — no spellfixing (see
-[`fix_spelling`](spellfix.md#fix_spellingtext-lexiconnone---str)), no
 sentence-stop spacing (see `space_sentences` below):
 
 ```python
@@ -180,7 +179,6 @@ normalize_text("ខ្ញុំទៅផ្សារ ។ទិញត្រី")
 ```
 
 `lexicon` defaults to the core `words` source, exactly like
-[`fix_spelling`](spellfix.md#fix_spellingtext-lexiconnone---str):
 
 ```python
 from khmerthings import Lexicon
@@ -226,7 +224,7 @@ normalize_text("សំរាប់", Lexicon(["សំរាប់"]))
   to visible), single visible spaces, and no remaining variant spellings.
 - **Conservative spelling fixes.** Only variants-map misspellings are ever
   rewritten; unknown words are left exactly as typed (see the
-  [spellchecker](spellcheck.md) to find those).
+  internal spelling checker to find those).
 - **Word-boundary accuracy scales with the dictionary**, same as the
   [word breaker](word-breaker.md) — unrecognized spans are kept intact as
   a single unit, never guessed at.
@@ -251,15 +249,12 @@ normalize_text("សំរាប់", Lexicon(["សំរាប់"]))
 | Normalize a string in Python | `normalize_text(text)` |
 | Normalize informal/social-media text | `khmerthings normalize --include names,modern file.txt` |
 | Prepare a corpus for line-breaking or search indexing | `khmerthings normalize corpus.txt > corpus.clean.txt` |
-| Check what's still unknown after normalizing | `khmerthings normalize f.txt \| khmerthings spellcheck` |
 | Only re-space, skip sentence-stop tidying | `khmerthings normalize --only words file.txt` / `space_words(text)` |
 | Only tidy sentence-stop spacing | `khmerthings normalize --only sentences file.txt` / `space_sentences(text)` |
 
 ## Related tools
 
-- [Spellfixer](spellfix.md) — the spelling-correction step this tool
   reuses, on its own with no re-spacing.
 - [Word breaker](word-breaker.md) — the segmentation engine underneath,
   and the source of the `mark_boundaries` hidden-space convention.
-- [Spellchecker](spellcheck.md) — reports what is still unknown after
   normalizing.

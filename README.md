@@ -6,8 +6,8 @@ compose into bigger systems.
 
 No machine-learning models, no third-party NLP dependencies, no network
 calls. Every result is reproducible and explainable. Khmer script writes no
-spaces between words, so even "simple" operations like counting or sorting
-need real language handling — khmerthings implements that from first
+spaces between words, so even "simple" word operations need real language
+handling — khmerthings implements that from first
 principles.
 
 **[Try it in your browser →](https://spkskx.github.io/khmerthings-demo/)**
@@ -21,11 +21,7 @@ its own detailed document:
 |---|---|---|---|
 | **Word breaker** — split Khmer text into words | `khmerthings segment` | `break_words`, `mark_boundaries` | [docs/word-breaker.md](docs/word-breaker.md) |
 | **Word counter** — count words in Khmer/mixed text | `khmerthings count` | `count_words`, `analyze` | [docs/word-counter.md](docs/word-counter.md) |
-| **Line sorter** — Khmer dictionary-order sorting | `khmerthings sort` | `sort_lines`, `khmer_sort_key` | [docs/line-sorter.md](docs/line-sorter.md) |
-| **Spellchecker** — find Khmer misspellings & unknown words | `khmerthings spellcheck` | `check_spelling` | [docs/spellcheck.md](docs/spellcheck.md) |
-| **Spellfixer** — rewrite known misspellings to canonical | `khmerthings spellfix` | `fix_spelling` | [docs/spellfix.md](docs/spellfix.md) |
 | **Normalizer** — spellfix + re-space into clean, ready-to-use text | `khmerthings normalize` | `normalize_text` | [docs/normalize.md](docs/normalize.md) |
-| **Orthography validator** — report definite Khmer encoding-structure errors | `khmerthings validate` | `validate_orthography` | [docs/orthography.md](docs/orthography.md) |
 
 ## Install
 
@@ -57,12 +53,11 @@ $ echo "ខ្ញុំស្រឡាញ់ភាសាខ្មែរ" | khmer
 ```
 
 ```python
-from khmerthings import break_words, count_words, fix_spelling, sort_lines
+from khmerthings import break_words, count_words, normalize_text
 
 break_words("ខ្ញុំស្រឡាញ់ភាសាខ្មែរ")   # ['ខ្ញុំ', 'ស្រឡាញ់', 'ភាសា', 'ខ្មែរ']
 count_words("ខ្ញុំមានឆ្កែ ២ ក្បាល and 3 cats")   # 8
-sort_lines(["ក្រ", "កា", "កក"])                    # ['កក', 'កា', 'ក្រ']
-fix_spelling("ខ្ញុំសំរាប់ការងារ")                  # 'ខ្ញុំសម្រាប់ការងារ'
+normalize_text("ខ្ញុំសំរាប់ការងារ")              # 'ខ្ញុំ​សម្រាប់​ការងារ'
 ```
 
 ## Design principles
@@ -90,20 +85,17 @@ docstrings if you want to build on them directly.
 The deterministic tool surface is **complete and frozen** — the focus now is
 depth, not breadth: growing the data and hardening what's already here.
 
-- ✅ Word segmentation and counting, Khmer dictionary-order sorting, spelling
-  checking and fixing, normalization, and orthography validation
+- ✅ Word segmentation, counting, and normalization
 - ⏳ Wordlist growth across all four sources (`words`, `names`, `modern`,
   `variants`) — hand-curated batches each release; the accuracy lever for every
-  dictionary-based tool, including spelling verdicts, suggestions, and fixes
-- ⏳ Quality & correctness — known-answer regression suites for segmentation,
-  spelling, validation, and sorting; invariant/edge-case hardening; profiling
+  dictionary-based processing
+- ⏳ Quality & correctness — known-answer regression suites for segmentation
+  and normalization; invariant/edge-case hardening; profiling
   of hot paths
 
 **Out of scope / not planned:** semantic ("understanding-level") NLP that
 would require probabilistic models — intent detection, paragraph
-categorization, and POS tagging are intentionally *not* on the roadmap. They
-conflict with the determinism guarantee; content extraction uses the curated
-stoplist instead.
+categorization, and POS tagging are intentionally *not* on the roadmap. They conflict with the determinism guarantee.
 
 ## Contributing
 

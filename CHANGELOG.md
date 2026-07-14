@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Removed line sorting, spell checking/fixing, and orthography validation from
+  the top-level Python API, CLI, and public docs. Their modules remain available
+  internally, including spelling correction used by normalization.
+
 ## [0.15.0] - 2026-07-14
 
 ### Removed

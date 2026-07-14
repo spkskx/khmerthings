@@ -10,49 +10,28 @@ from khmerthings.lexicon import (
     load_variants,
 )
 from khmerthings.normalize import normalize_text, space_sentences, space_words
-from khmerthings.orthography import OrthographyIssue, OrthographyIssueCode, validate_orthography
 from khmerthings.segmenter import break_words, mark_boundaries
-from khmerthings.sorting import khmer_sort_key, sort_lines
-from khmerthings.spellcheck import (
-    IssueKind,
-    SpellIssue,
-    check_spelling,
-    check_unknown,
-    check_variants,
-    fix_spelling,
-)
 from khmerthings.tokenizer import Token, TokenType, tokenize
 
 __version__ = "0.15.0"
 
 __all__ = [
     "WORD_SOURCES",
-    "IssueKind",
     "Lexicon",
-    "OrthographyIssue",
-    "OrthographyIssueCode",
-    "SpellIssue",
     "Token",
     "TokenType",
     "WordCount",
     "__version__",
     "analyze",
     "break_words",
-    "check_spelling",
-    "check_unknown",
-    "check_variants",
     "count_words",
     "default_lexicon",
-    "fix_spelling",
-    "khmer_sort_key",
     "load_lexicon",
     "load_variants",
     "mark_boundaries",
     "normalize_text",
     "segment_clusters",
-    "sort_lines",
     "space_sentences",
     "space_words",
     "tokenize",
-    "validate_orthography",
 ]
