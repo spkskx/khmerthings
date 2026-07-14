@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-07-14
+
+### Added
+
+- Expanded the core lexicon with common complete derived words across `ការ`,
+  `ភាព`, `សេចក្តី`/`សេចក្ដី`, `ក្តី`/`ក្ដី`, and `អ្នក` patterns, so
+  longest-match tokenization preserves common nominalized and agent compounds.
+
 ## [0.13.0] - 2026-07-14
 
 ### Added
