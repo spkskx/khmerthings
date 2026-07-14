@@ -28,6 +28,7 @@ its own detailed document:
 | **Condenser** — strip function words, keep only content words | `khmerthings condense` | `condense_text`, `content_words` | [docs/condense.md](docs/condense.md) |
 | **Romanizer** — phonetically romanize Khmer into Latin | `khmerthings romanize` | `romanize` | [docs/romanize.md](docs/romanize.md) |
 | **Numerals** — convert digits & spell numbers in Khmer | `khmerthings numerals` | `arabic_to_khmer`, `khmer_to_arabic`, `number_to_words` | [docs/numerals.md](docs/numerals.md) |
+| **Orthography validator** — report definite Khmer encoding-structure errors | `khmerthings validate` | `validate_orthography` | [docs/orthography.md](docs/orthography.md) |
 
 ## Install
 
@@ -81,7 +82,8 @@ The deterministic tool surface is **complete and frozen** — the focus now is
 depth, not breadth: growing the data and hardening what's already here.
 
 - ✅ Word counter, line sorter, word breaker, spellchecker & spellfixer,
-  normalizer, condenser (content-word extraction), romanizer, numerals
+  normalizer, condenser (content-word extraction), romanizer, numerals,
+  orthography validator
 - ⏳ Wordlist growth across all four sources (`words`, `names`, `modern`,
   `variants`) plus the condenser's `stopwords` list — hand-curated batches
   each release; the accuracy lever for every dictionary-based tool, including

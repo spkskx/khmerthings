@@ -22,6 +22,7 @@ from khmerthings import (
     normalize_text,
     segment_clusters,
     tokenize,
+    validate_orthography,
 )
 from khmerthings.tokenizer import TokenType
 
@@ -42,6 +43,7 @@ CORPUS: list[str] = [
     "abc១២៣ការ។៕",
     "្ក",  # orphan coeng at start (malformed)
     "ក្",  # trailing coeng (malformed)
+    "ក្ឥ",  # coeng before an independent vowel (malformed)
     "កាំះ",  # multiple signs
     "ﾟ ក ﷽",  # exotic non-Khmer that NFC may change
     "។ ។ ។",
@@ -92,6 +94,18 @@ def test_word_count_matches_break_words(text: str) -> None:
 def test_normalize_is_idempotent(text: str) -> None:
     once = normalize_text(text)
     assert normalize_text(once) == once
+
+
+@pytest.mark.parametrize("text", CORPUS)
+def test_orthography_issues_have_stable_nfc_offsets(text: str) -> None:
+    nfc = unicodedata.normalize("NFC", text)
+    issues = validate_orthography(text)
+    assert issues == validate_orthography(text)
+    keys = [(issue.start, issue.end, issue.code.value) for issue in issues]
+    assert keys == sorted(keys)
+    for issue in issues:
+        assert 0 <= issue.start < issue.end <= len(nfc)
+        assert nfc[issue.start : issue.end] == issue.text
 
 
 @pytest.mark.parametrize("text", CORPUS)

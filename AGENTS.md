@@ -54,23 +54,28 @@ considering any change done.
 
 1. `chars.py` — Khmer Unicode character classification (pure functions,
    single-character contract: multi-char input raises `ValueError`).
-2. `clusters.py` — Khmer character-cluster (KCC) segmentation. Cluster
-   boundaries are the only legal word boundaries.
-3. `lexicon.py` + `data/*.txt` — wordlists (`words`/`names`/`modern`/
+2. `clusters.py` — permissive, lossless Khmer character-cluster (KCC)
+   segmentation. Coeng forms a subscript only with a consonant; malformed
+   sequences are preserved, not certified as valid. Cluster boundaries are
+   the only legal word boundaries.
+3. `orthography.py` — conservative deterministic validation of definite Khmer
+   encoding-structure errors (`validate_orthography`); read-only, lexicon-free,
+   NFC offsets, no guessed corrections. CLI: `khmerthings validate`.
+4. `lexicon.py` + `data/*.txt` — wordlists (`words`/`names`/`modern`/
    `variants`) + trie keyed by clusters; `longest_match` is the segmentation
    primitive; `load_lexicon(*sources)` merges sources (cached), `--include`
    on the CLI exposes the extra ones; `load_variants()` returns the
    misspelling→canonical map (the spellchecker/spellfixer correction table).
-4. `tokenizer.py` — lossless typed tokenization (Khmer words via greedy
+5. `tokenizer.py` — lossless typed tokenization (Khmer words via greedy
    longest-match; unknown Khmer spans become `KHMER_UNKNOWN`, never dropped).
-5. `counter.py` — word counter tool (`count_words`, `analyze`).
-6. `segmenter.py` — word breaker tool (`break_words`, `mark_boundaries`),
+6. `counter.py` — word counter tool (`count_words`, `analyze`).
+7. `segmenter.py` — word breaker tool (`break_words`, `mark_boundaries`),
    a thin first-class wrapper over `tokenize`; invariant
    `len(break_words(t)) == count_words(t)`.
-7. `sorting.py` — Khmer dictionary-order line sorting (`sort_lines`,
+8. `sorting.py` — Khmer dictionary-order line sorting (`sort_lines`,
    `khmer_sort_key`: per-cluster key `(base, coengs, vowels, signs)` —
    naive codepoint order is wrong for subscripts).
-8. `spellcheck.py` — spellchecker & spellfixer. `check_variants` (VARIANT
+9. `spellcheck.py` — spellchecker & spellfixer. `check_variants` (VARIANT
    only, plain dict lookup) and `check_unknown` (UNKNOWN only, cluster-level
    edit distance ranked by `(distance, khmer_sort_key)`) are the two
    detection primitives; `check_spelling` is a thin wrapper merging both,
@@ -79,7 +84,7 @@ considering any change done.
    variants keys (the lexicon+variants union builder, `_checking_lexicon`,
    lives in `lexicon.py` and is shared with `normalize.py`); a spelling
    present in the caller's lexicon is never flagged.
-9. `normalize.py` — text normalizer (`normalize_text`): composes
+10. `normalize.py` — text normalizer (`normalize_text`): composes
    `spellcheck.fix_spelling`, `space_words` (segmentation-aware spacing —
    hidden zero-width space at bare Khmer word boundaries, same rule as
    `mark_boundaries`, collapsed/trimmed whitespace elsewhere), and
@@ -87,14 +92,14 @@ considering any change done.
    one space after, via the `chars.is_khmer_sentence_stop` primitive; a
    pure string scan, no tokenizer/lexicon). All three are independently
    callable. Idempotent.
-10. `condense.py` — content-word extractor (`content_words`,
+11. `condense.py` — content-word extractor (`content_words`,
     `condense_text`, `content_tokens`). *Lossy* — the only tool that does
     not reproduce its input. Tokenizes against the caller's lexicon unioned
     with every stopword (`_content_lexicon`), drops punctuation/whitespace
     and any Khmer word whose stopword category is in the active `remove` set
     (`DEFAULT_REMOVE` keeps the intent-bearing categories pronoun/auxiliary/
     question).
-11. `romanize.py` — phonetic romanizer (`romanize`), UNGEGN-style. Tokenizes
+12. `romanize.py` — phonetic romanizer (`romanize`), UNGEGN-style. Tokenizes
     against the caller's lexicon unioned with the romanization-exception keys
     (`_exception_lexicon`); each Khmer word is looked up in the exception map
     (`load_romanizations()`) first, else romanized cluster-by-cluster with a
@@ -103,12 +108,12 @@ considering any change done.
     as a coda, register shifters ៉/៊ flip the series. Khmer digits → Arabic;
     non-Khmer passes through; adjacent Khmer words are space-separated.
     *Phonetic, not reversible.*
-12. `numerals.py` — numeral tool (`arabic_to_khmer`, `khmer_to_arabic`,
+13. `numerals.py` — numeral tool (`arabic_to_khmer`, `khmer_to_arabic`,
     `number_to_words`). Digit conversion is a pure `str.translate` over the
     two 0–9 ranges (reversible on the digit subset); `number_to_words` spells
     an integer via the recursive decimal-unit system (in-module tables, no
     data file). No lexicon.
-13. `cli.py` — argparse subcommands, one per tool (`khmerthings count ...`,
+14. `cli.py` — argparse subcommands, one per tool (`khmerthings count ...`,
     `khmerthings segment ...`, `khmerthings sort ...`,
     `khmerthings spellcheck ...` (exit 1 = issues found; `--only
     {variants,unknown}` runs a single detection kind),
@@ -116,7 +121,8 @@ considering any change done.
     `khmerthings normalize ...` (`--only {words,sentences}` runs a single
     pass), `khmerthings condense ...` (`--words`, `--remove`),
     `khmerthings romanize ...`,
-    `khmerthings numerals ...` (`--to {khmer,arabic,words}`)).
+    `khmerthings numerals ...` (`--to {khmer,arabic,words}`),
+    `khmerthings validate ...` (`--json`; exit 1 = issues found)).
 
 The deterministic tool surface is **complete and frozen**; the current phase
 is consolidation (data depth + correctness hardening), not new tools.

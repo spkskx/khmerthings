@@ -18,6 +18,7 @@ from khmerthings.counter import analyze
 from khmerthings.lexicon import STOPWORD_CATEGORIES, WORD_SOURCES, Lexicon, load_lexicon
 from khmerthings.normalize import normalize_text, space_sentences, space_words
 from khmerthings.numerals import arabic_to_khmer, khmer_to_arabic, number_to_words
+from khmerthings.orthography import validate_orthography
 from khmerthings.romanize import romanize
 from khmerthings.segmenter import break_words, mark_boundaries
 from khmerthings.sorting import sort_lines
@@ -224,6 +225,34 @@ def _cmd_numerals(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_validate(args: argparse.Namespace) -> int:
+    paths: list[str] = args.files or ["-"]
+    json_issues: list[dict[str, object]] = []
+    found = False
+    for path in paths:
+        source, text = _read_source(path)
+        for lineno, line in enumerate(text.splitlines(), start=1):
+            for issue in validate_orthography(line):
+                found = True
+                if args.json:
+                    json_issues.append(
+                        {
+                            "source": source,
+                            "line": lineno,
+                            "col": issue.start + 1,
+                            "start": issue.start,
+                            "end": issue.end,
+                            "text": issue.text,
+                            "code": issue.code.value,
+                        }
+                    )
+                else:
+                    print(f"{source}:{lineno}:{issue.start + 1}: {issue.code.value}: {issue.text}")
+    if args.json:
+        print(json.dumps(json_issues, ensure_ascii=False, indent=2))
+    return 1 if found else 0
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="khmerthings",
@@ -344,6 +373,13 @@ def _build_parser() -> argparse.ArgumentParser:
         help="target form: khmer digits (default), arabic digits, or spelled-out Khmer words",
     )
     numerals.set_defaults(func=_cmd_numerals)
+
+    validate = subparsers.add_parser(
+        "validate", help="report definite Khmer orthographic structure errors"
+    )
+    validate.add_argument("files", nargs="*", help="input files, or '-' for stdin (default)")
+    validate.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    validate.set_defaults(func=_cmd_validate)
 
     return parser
 

@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Orthography validator:** `validate_orthography()` and `khmerthings validate`
+  report definite Khmer Unicode structure errors with stable issue codes and NFC
+  offsets. Validation is deterministic, conservative, read-only, and available
+  as plain text or JSON (`--json`; exit 1 when issues are found).
+
+### Fixed
+
+- **Character clusters:** coeng now forms a subscript only with a consonant;
+  an independent vowel after coeng starts a new cluster while malformed text
+  remains lossless.
+
 ## [0.12.0] - 2026-07-10
 
 ### Changed

@@ -32,6 +32,15 @@ class TestSubscripts:
         # ស្ត្រី = ស + coeng ត + coeng រ + ី: one cluster
         assert segment_clusters("ស្ត្រី") == ["ស្ត្រី"]
 
+    def test_coeng_does_not_form_subscript_with_independent_vowel(self) -> None:
+        text = "ក្ឥ"
+        assert segment_clusters(text) == ["ក្", "ឥ"]
+
+    @pytest.mark.parametrize("cp", range(0x1780, 0x17A3))
+    def test_every_consonant_can_follow_coeng(self, cp: int) -> None:
+        text = "ក្" + chr(cp)
+        assert segment_clusters(text) == [text]
+
     def test_khnhom(self) -> None:
         # ខ្ញុំ = ខ + coeng ញ + ុ + ំ: one cluster
         assert segment_clusters("ខ្ញុំ") == ["ខ្ញុំ"]

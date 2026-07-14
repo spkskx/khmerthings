@@ -2,9 +2,10 @@
 
 A Khmer character cluster is the smallest user-visible unit of text: a base
 consonant or independent vowel, optionally followed by subscript (coeng)
-consonants, dependent vowels, and combining signs. Cluster boundaries are the
-only positions where a word boundary can legally occur, which makes this the
-foundation for word segmentation.
+consonants, dependent vowels, and combining signs. This permissive, lossless
+scanner finds safe boundaries; it does not certify orthographic validity.
+Cluster boundaries are the only positions where a word boundary can legally
+occur, which makes this the foundation for word segmentation.
 
 The segmenter is a deterministic scanner over NFC-normalized text. It never
 drops or reorders characters: ``"".join(segment_clusters(t))`` always equals
@@ -58,7 +59,7 @@ def segment_clusters(text: str) -> list[str]:
             j = i + 1
             while j < n:
                 c = text[j]
-                if _is_coeng(c) and j + 1 < n and _is_base(text[j + 1]):
+                if _is_coeng(c) and j + 1 < n and is_consonant(text[j + 1]):
                     j += 2
                 elif _is_trailing(c):
                     j += 1

@@ -20,6 +20,7 @@ from khmerthings.lexicon import (
 )
 from khmerthings.normalize import normalize_text, space_sentences, space_words
 from khmerthings.numerals import arabic_to_khmer, khmer_to_arabic, number_to_words
+from khmerthings.orthography import OrthographyIssue, OrthographyIssueCode, validate_orthography
 from khmerthings.romanize import romanize
 from khmerthings.segmenter import break_words, mark_boundaries
 from khmerthings.sorting import khmer_sort_key, sort_lines
@@ -41,6 +42,8 @@ __all__ = [
     "WORD_SOURCES",
     "IssueKind",
     "Lexicon",
+    "OrthographyIssue",
+    "OrthographyIssueCode",
     "SpellIssue",
     "Token",
     "TokenType",
@@ -73,4 +76,5 @@ __all__ = [
     "space_sentences",
     "space_words",
     "tokenize",
+    "validate_orthography",
 ]

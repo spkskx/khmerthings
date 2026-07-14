@@ -116,7 +116,10 @@ ro-ordering pairs) are *not* variants; list both spellings as canonical.
   boundaries must be inferred via the lexicon.
 - A **character cluster** (base consonant + subscript consonants + vowel +
   signs) is the smallest indivisible unit; word boundaries can only fall on
-  cluster boundaries. `clusters.py` implements this.
+  cluster boundaries. `clusters.py` finds permissive, lossless boundaries.
+- `orthography.py` separately reports definite malformed encoding structures.
+  It is conservative and read-only: no dictionary lookup, guessed correction,
+  mark reordering, or limit on stacked consonants.
 - The zero-width space (U+200B) is used in real Khmer text as an explicit
   word delimiter; the tokenizer treats it as whitespace.
 

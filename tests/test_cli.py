@@ -254,6 +254,32 @@ class TestMain:
         assert main(["numerals", "--to", "words", str(f)]) == 0
         assert capsys.readouterr().out == "លេខ ម្ភៃប្រាំ នៅ\n"
 
+    def test_validate_reports_issue_and_exit_one(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        f = tmp_path / "text.txt"
+        f.write_text("ក្ឥ\n", encoding="utf-8")
+        assert main(["validate", str(f)]) == 1
+        assert capsys.readouterr().out == f"{f}:1:2: invalid_coeng_follower: ្ឥ\n"
+
+    def test_validate_json_clean_and_invalid(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        f = tmp_path / "text.txt"
+        f.write_text("ក\nកាិ\n", encoding="utf-8")
+        assert main(["validate", "--json", str(f)]) == 1
+        assert json.loads(capsys.readouterr().out) == [
+            {
+                "source": str(f),
+                "line": 2,
+                "col": 3,
+                "start": 2,
+                "end": 3,
+                "text": "ិ",
+                "code": "repeated_dependent_vowel",
+            }
+        ]
+
     def test_numerals_default_is_khmer(
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
@@ -283,6 +309,7 @@ SUBCOMMANDS = [
     "condense",
     "romanize",
     "numerals",
+    "validate",
 ]
 
 
