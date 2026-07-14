@@ -13,7 +13,7 @@ from khmerthings.normalize import normalize_text, space_sentences, space_words
 from khmerthings.segmenter import break_words, mark_boundaries
 from khmerthings.tokenizer import Token, TokenType, tokenize
 
-__version__ = "0.15.0"
+__version__ = "0.15.1"
 
 __all__ = [
     "WORD_SOURCES",
