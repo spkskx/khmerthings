@@ -9,6 +9,7 @@ import argparse
 import dataclasses
 import json
 import re
+import subprocess
 import sys
 from collections.abc import Callable, Sequence
 
@@ -225,6 +226,37 @@ def _cmd_numerals(args: argparse.Namespace) -> int:
     return 0
 
 
+def _package_command(action: str) -> list[str]:
+    executable = sys.executable.replace("\\", "/")
+    if "/uv/tools/khmerthings/" in executable:
+        uv_action = "upgrade" if action == "update" else "uninstall"
+        return ["uv", "tool", uv_action, "khmerthings"]
+    if "/pipx/venvs/khmerthings/" in executable:
+        pipx_action = "upgrade" if action == "update" else "uninstall"
+        return ["pipx", pipx_action, "khmerthings"]
+    if action == "update":
+        return [sys.executable, "-m", "pip", "install", "--upgrade", "khmerthings"]
+    return [sys.executable, "-m", "pip", "uninstall", "-y", "khmerthings"]
+
+
+def _cmd_update(args: argparse.Namespace) -> int:
+    del args
+    command = _package_command("update")
+    print(f"Updating khmerthings with {command[0]}...")
+    return subprocess.run(command, check=False).returncode
+
+
+def _cmd_uninstall(args: argparse.Namespace) -> int:
+    del args
+    answer = input("Uninstall khmerthings? [y/N] ").strip().lower()
+    if answer not in {"y", "yes"}:
+        print("Uninstall cancelled.")
+        return 0
+    command = _package_command("uninstall")
+    print(f"Uninstalling khmerthings with {command[0]}...")
+    return subprocess.run(command, check=False).returncode
+
+
 def _cmd_validate(args: argparse.Namespace) -> int:
     paths: list[str] = args.files or ["-"]
     json_issues: list[dict[str, object]] = []
@@ -380,6 +412,12 @@ def _build_parser() -> argparse.ArgumentParser:
     validate.add_argument("files", nargs="*", help="input files, or '-' for stdin (default)")
     validate.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     validate.set_defaults(func=_cmd_validate)
+
+    update = subparsers.add_parser("update", help="update khmerthings to the latest version")
+    update.set_defaults(func=_cmd_update)
+
+    uninstall = subparsers.add_parser("uninstall", help="uninstall khmerthings after confirmation")
+    uninstall.set_defaults(func=_cmd_uninstall)
 
     return parser
 

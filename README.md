@@ -45,6 +45,13 @@ curl -LsSf https://raw.githubusercontent.com/spkskx/khmerthings/main/install.sh 
 
 Requires macOS or Linux. Verify the install with `khmerthings --help`.
 
+Update or remove the CLI from the same command:
+
+```sh
+khmerthings update      # upgrade with uv tool, pipx, or pip (detected from the install)
+khmerthings uninstall   # asks y/N, then removes the package the same way
+```
+
 ## A taste
 
 ```sh

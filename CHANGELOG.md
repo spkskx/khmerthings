@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-07-14
+
 ### Added
 
 - Expanded the core lexicon with common complete derived words, including
@@ -17,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Khmer dictionary order. The fixer remains conservative and rewrites only
   curated variants.
 - Added a `curl | sh` installer for the `khmerthings` CLI on macOS and Linux.
+- Added `khmerthings update` and `khmerthings uninstall` package-management commands;
+  they route through the detected installer (`uv tool`, `pipx`, or `pip`), with uninstall
+  requiring confirmation.
 - **Orthography validator:** `validate_orthography()` and `khmerthings validate`
   report definite Khmer Unicode structure errors with stable issue codes and NFC
   offsets. Validation is deterministic, conservative, read-only, and available

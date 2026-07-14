@@ -298,6 +298,59 @@ class TestMain:
             main([])
         assert exc.value.code == 2
 
+    def test_update_runs_uv_when_installed_by_uv(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        calls: list[list[str]] = []
+
+        def fake_run(command: list[str], check: bool = False) -> subprocess.CompletedProcess[str]:
+            calls.append(command)
+            return subprocess.CompletedProcess(command, 0)
+
+        monkeypatch.setattr(
+            "khmerthings.cli.sys.executable",
+            "/home/me/.local/share/uv/tools/khmerthings/bin/python",
+        )
+        monkeypatch.setattr("khmerthings.cli.subprocess.run", fake_run)
+        assert main(["update"]) == 0
+        assert calls == [["uv", "tool", "upgrade", "khmerthings"]]
+        assert capsys.readouterr().out == "Updating khmerthings with uv...\n"
+
+    def test_update_falls_back_to_current_python_pip(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        calls: list[list[str]] = []
+
+        def fake_run(command: list[str], check: bool = False) -> subprocess.CompletedProcess[str]:
+            calls.append(command)
+            return subprocess.CompletedProcess(command, 0)
+
+        monkeypatch.setattr("khmerthings.cli.sys.executable", "/venv/bin/python")
+        monkeypatch.setattr("khmerthings.cli.subprocess.run", fake_run)
+        assert main(["update"]) == 0
+        assert calls == [["/venv/bin/python", "-m", "pip", "install", "--upgrade", "khmerthings"]]
+
+    def test_uninstall_prompts_before_running(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        calls: list[list[str]] = []
+
+        def fake_run(command: list[str], check: bool = False) -> subprocess.CompletedProcess[str]:
+            calls.append(command)
+            return subprocess.CompletedProcess(command, 0)
+
+        monkeypatch.setattr(
+            "khmerthings.cli.sys.executable",
+            "/home/me/.local/pipx/venvs/khmerthings/bin/python",
+        )
+        monkeypatch.setattr("khmerthings.cli.subprocess.run", fake_run)
+        monkeypatch.setattr("builtins.input", lambda prompt: "n")
+        assert main(["uninstall"]) == 0
+        assert calls == []
+        assert capsys.readouterr().out == "Uninstall cancelled.\n"
+
+        monkeypatch.setattr("builtins.input", lambda prompt: "y")
+        assert main(["uninstall"]) == 0
+        assert calls == [["pipx", "uninstall", "khmerthings"]]
+
 
 SUBCOMMANDS = [
     "count",

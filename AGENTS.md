@@ -123,7 +123,8 @@ considering any change done.
     pass), `khmerthings condense ...` (`--words`, `--remove`),
     `khmerthings romanize ...`,
     `khmerthings numerals ...` (`--to {khmer,arabic,words}`),
-    `khmerthings validate ...` (`--json`; exit 1 = issues found)).
+    `khmerthings validate ...` (`--json`; exit 1 = issues found),
+    `khmerthings update`, and `khmerthings uninstall` (prompts before removal)).
 
 The deterministic tool surface is **complete and frozen**; the current phase
 is consolidation (data depth + correctness hardening), not new tools.
