@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-07-14
+
+### Removed
+
+- Removed the condenser, romanizer, and numeral converter from the Python API,
+  CLI, package data, tests, and documentation. Project scope now focuses on
+  segmentation/counting, spelling/normalization, orthography validation, and
+  Khmer dictionary-order sorting. The romanizer's internal phonetic rules remain
+  private only where needed to rank spelling suggestions.
+
 ## [0.14.0] - 2026-07-14
 
 ### Added

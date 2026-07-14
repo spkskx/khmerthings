@@ -1,40 +1,6 @@
-"""Phonetic romanization of Khmer text (UNGEGN-style).
-
-Turns Khmer script into a readable Latin approximation of how it sounds —
-e.g. ``ភ្នំពេញ`` → ``phnom penh`` — using the two-register system that
-governs Khmer vowel pronunciation. This is a deterministic rule engine, not
-a probabilistic transliterator, backed by a curated whole-word **exception
-lexicon** (``data/romanize.txt``) that overrides the rules for irregular
-words and established place-name spellings.
-
-It is **phonetic, not reversible**: two different spellings can romanize the
-same way, and the Latin output cannot be mapped back to a unique Khmer
-spelling. For a lossless round-trip you would need a transliteration scheme,
-which this is not.
-
-## How it works
-
-Text is tokenized (:func:`khmerthings.tokenizer.tokenize`) against the
-caller's lexicon unioned with the exception-lexicon keys, so an exception
-entry always surfaces as a single word. For each Khmer word:
-
-1. If the whole word is in the exception lexicon, its curated spelling wins.
-2. Otherwise the word is romanized cluster by cluster. Each cluster resolves
-   a consonant series (1st/2nd register), an onset (base consonant plus any
-   subscript consonants), and a vowel — dependent vowels read differently per
-   register; a bare consonant with no vowel takes the register's inherent
-   vowel unless it closes a syllable, where it reads as a final consonant.
-
-Register shifters muusikatoan (``៉``) and triisap (``៊``) flip the register;
-Khmer digits are rendered as Arabic numerals; non-Khmer runs pass through
-unchanged. The rule engine is a practical approximation of UNGEGN 1972 order,
-not a full phonological model — see the exception lexicon for correctness on
-words the rules get wrong.
-"""
+"""Private phonetic approximation used to rank spelling suggestions."""
 
 from __future__ import annotations
-
-import unicodedata
 
 from khmerthings.chars import (
     COENG,
@@ -43,11 +9,8 @@ from khmerthings.chars import (
     is_independent_vowel,
 )
 from khmerthings.clusters import segment_clusters
-from khmerthings.lexicon import Lexicon, default_lexicon, load_romanizations
-from khmerthings.numerals import khmer_to_arabic
-from khmerthings.tokenizer import TokenType, tokenize
 
-__all__ = ["romanize"]
+__all__: list[str] = []
 
 # --- Consonant tables -------------------------------------------------------
 # Series: False = 1st register (a-series), True = 2nd register (o-series).
@@ -148,7 +111,7 @@ def _romanize_word(word: str) -> str:
             had_vowel = True
             continue
         if not is_consonant(base):
-            out.append(khmer_to_arabic(cluster))  # digits; else passthrough
+            out.append(cluster)
             continue
 
         _, subs, vowel, signs = _split_cluster(cluster)
@@ -182,46 +145,4 @@ def _romanize_word(word: str) -> str:
         # _MUUSIKATOAN / _TRIISAP already consumed as register shifters;
         # _SILENT_SIGNS contribute nothing.
 
-    return "".join(out)
-
-
-def _exception_lexicon(lexicon: Lexicon) -> Lexicon:
-    """*lexicon* plus the exception-lexicon keys, so exceptions tokenize whole."""
-    return Lexicon(set(lexicon) | set(load_romanizations()))
-
-
-def romanize(text: str, lexicon: Lexicon | None = None) -> str:
-    """Return a phonetic Latin romanization of *text* (UNGEGN-style).
-
-    Khmer words are looked up in the exception lexicon first and otherwise
-    romanized by rule; Khmer digits become Arabic numerals; non-Khmer text
-    passes through unchanged. Tokenization uses *lexicon* (default: the core
-    ``"words"`` source) unioned with the exception-lexicon keys.
-
-    Phonetic and not reversible — see the module docstring.
-
-    >>> romanize("ភ្នំពេញ")
-    'phnom penh'
-    """
-    if lexicon is None:
-        lexicon = default_lexicon()
-    text = unicodedata.normalize("NFC", text)
-    exceptions = load_romanizations()
-    tokens = tokenize(text, _exception_lexicon(lexicon))
-
-    out: list[str] = []
-    prev_was_word = False
-    for token in tokens:
-        is_word = token.type in (TokenType.KHMER_WORD, TokenType.KHMER_UNKNOWN)
-        if is_word:
-            # Khmer runs no spaces between words; separate romanized words so
-            # the output reads as words rather than one run-on string.
-            if prev_was_word:
-                out.append(" ")
-            out.append(exceptions.get(token.text) or _romanize_word(token.text))
-        elif token.type is TokenType.KHMER_DIGIT:
-            out.append(khmer_to_arabic(token.text))
-        else:
-            out.append(token.text)
-        prev_was_word = is_word
     return "".join(out)

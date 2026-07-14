@@ -6,15 +6,11 @@ from khmerthings.chars import is_khmer_letter_or_mark
 from khmerthings.clusters import segment_clusters
 from khmerthings.clusters import segment_clusters as segment_clusters_for_match
 from khmerthings.lexicon import (
-    STOPWORD_CATEGORIES,
     WORD_SOURCES,
     Lexicon,
     default_lexicon,
     load_lexicon,
-    load_romanizations,
-    load_stopwords,
     load_variants,
-    parse_romanizations,
     parse_variants,
 )
 
@@ -320,41 +316,6 @@ class TestLoadVariants:
         assert "ព័ត៍មាន" not in load_lexicon("words")
 
 
-class TestParseRomanizations:
-    def test_basic_mapping(self) -> None:
-        mapping = parse_romanizations(["# comment", "", "ភ្នំពេញ\tphnom penh", "  ខ្មែរ\tkhmer  "])
-        assert mapping == {"ភ្នំពេញ": "phnom penh", "ខ្មែរ": "khmer"}
-
-    @pytest.mark.parametrize(
-        "line, match",
-        [
-            ("ភ្នំពេញ", "malformed romanize line"),
-            ("ភ្នំពេញ\t", "malformed romanize line"),
-            ("\tphnom", "malformed romanize line"),
-            ("phnom\tpenh", "non-Khmer characters"),
-            ("ខ្មែរ\tខ្មែរ", "not ASCII"),
-        ],
-    )
-    def test_bad_lines_rejected(self, line: str, match: str) -> None:
-        with pytest.raises(ValueError, match=match):
-            parse_romanizations([line])
-
-    def test_duplicate_key_rejected(self) -> None:
-        with pytest.raises(ValueError, match="duplicate romanization key"):
-            parse_romanizations(["ខ្មែរ\tkhmer", "ខ្មែរ\tkhmae"])
-
-
-class TestLoadRomanizations:
-    def test_loads_and_is_cached(self) -> None:
-        mapping = load_romanizations()
-        assert mapping is load_romanizations()
-        assert mapping["ភ្នំពេញ"] == "phnom penh"
-
-    def test_all_values_ascii(self) -> None:
-        for latin in load_romanizations().values():
-            assert latin.isascii() and latin == latin.strip() and latin
-
-
 class TestShippedDataIntegrity:
     """Whole-file guarantees over the real data files under ``data/``.
 
@@ -369,8 +330,6 @@ class TestShippedDataIntegrity:
         for source in WORD_SOURCES:
             assert len(load_lexicon(source)) > 0
         assert load_variants()
-        assert load_stopwords()
-        assert load_romanizations()
 
     @pytest.mark.parametrize("source", sorted(WORD_SOURCES))
     def test_word_source_entries_are_nfc_khmer(self, source: str) -> None:
@@ -381,24 +340,3 @@ class TestShippedDataIntegrity:
             assert all(is_khmer_letter_or_mark(ch) for ch in word), (
                 f"{word!r} non-Khmer in {source}"
             )
-
-    def test_every_stopword_is_a_real_word(self) -> None:
-        # A stopword classifies an existing word; it must never introduce a
-        # spelling absent from the word files (else the condenser would carry
-        # a "word" no tokenizer can produce).
-        merged = load_lexicon("words", "names", "modern")
-        for word in load_stopwords():
-            assert word in merged, f"stopword {word!r} is not in the word files"
-
-    def test_stopword_categories_are_known(self) -> None:
-        assert set(load_stopwords().values()) <= STOPWORD_CATEGORIES
-
-    def test_variant_keys_are_not_stopwords(self) -> None:
-        # A known misspelling and a function-word classification are disjoint
-        # roles; the same spelling must not appear as both.
-        assert not (set(load_variants()) & set(load_stopwords()))
-
-    def test_romanization_keys_are_khmer_nfc(self) -> None:
-        for khmer in load_romanizations():
-            assert unicodedata.normalize("NFC", khmer) == khmer
-            assert all(is_khmer_letter_or_mark(ch) for ch in khmer)

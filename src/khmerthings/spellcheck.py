@@ -26,7 +26,7 @@ from functools import cache
 
 from khmerthings.clusters import segment_clusters
 from khmerthings.lexicon import Lexicon, _checking_lexicon, default_lexicon, load_variants
-from khmerthings.romanize import _romanize_word
+from khmerthings.phonetics import _romanize_word
 from khmerthings.sorting import SortKey, khmer_sort_key
 from khmerthings.tokenizer import TokenType, tokenize
 

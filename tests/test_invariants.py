@@ -15,10 +15,8 @@ import unicodedata
 import pytest
 
 from khmerthings import (
-    arabic_to_khmer,
     break_words,
     count_words,
-    khmer_to_arabic,
     normalize_text,
     segment_clusters,
     tokenize,
@@ -113,19 +111,3 @@ def test_khmer_word_tokens_are_nonempty_khmer(text: str) -> None:
     for tok in tokenize(text):
         if tok.type in (TokenType.KHMER_WORD, TokenType.KHMER_UNKNOWN):
             assert tok.text  # never an empty Khmer token
-
-
-class TestNumeralRoundTrip:
-    @pytest.mark.parametrize("arabic", ["0", "2026", "1234567890", "007", ""])
-    def test_arabic_khmer_arabic(self, arabic: str) -> None:
-        assert khmer_to_arabic(arabic_to_khmer(arabic)) == arabic
-
-    @pytest.mark.parametrize("khmer", ["០", "២០២៦", "១២៣៤៥៦៧៨៩០", ""])
-    def test_khmer_arabic_khmer(self, khmer: str) -> None:
-        assert arabic_to_khmer(khmer_to_arabic(khmer)) == khmer
-
-    def test_conversions_only_touch_digits(self) -> None:
-        # Non-digit characters pass through both directions unchanged.
-        mixed = "ក2026ខ។"
-        assert arabic_to_khmer(mixed) == "ក២០២៦ខ។"
-        assert khmer_to_arabic("ក២០២៦ខ។") == mixed

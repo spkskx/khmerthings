@@ -16,37 +16,12 @@ from khmerthings.chars import ZERO_WIDTH_SPACE, is_khmer_letter_or_mark
 from khmerthings.clusters import segment_clusters
 
 __all__ = [
-    "STOPWORD_CATEGORIES",
     "WORD_SOURCES",
     "Lexicon",
     "default_lexicon",
     "load_lexicon",
-    "load_romanizations",
-    "load_stopwords",
     "load_variants",
 ]
-
-#: Closed set of stopword categories used by ``stopwords.txt`` and the
-#: :mod:`khmerthings.condense` content-word extractor.
-STOPWORD_CATEGORIES: frozenset[str] = frozenset(
-    {
-        "particle",
-        "politeness",
-        "filler",
-        "preposition",
-        "conjunction",
-        "demonstrative",
-        "pronoun",
-        "auxiliary",
-        "question",
-    }
-)
-
-#: Filename of the two-column stopword data file (word<TAB>category).
-_STOPWORDS_FILE = "stopwords.txt"
-
-#: Filename of the two-column romanization exception file (word<TAB>latin).
-_ROMANIZE_FILE = "romanize.txt"
 
 #: Built-in wordlist sources shipped with the package. Each is an
 #: independently curated, growable data file under ``khmerthings/data/``:
@@ -210,86 +185,6 @@ def parse_variants(lines: Iterable[str]) -> dict[str, str]:
             raise ValueError(
                 f"canonical {canonical!r} (for variant {variant!r}) is itself listed as a variant"
             )
-    return mapping
-
-
-@cache
-def load_stopwords() -> dict[str, str]:
-    """Load the built-in stopword → category map.
-
-    The ``stopwords.txt`` data file has one entry per line as
-    ``word<TAB>category``; blank lines and ``#`` comments are ignored. The
-    word must be NFC-normalized Khmer text and the category one of
-    :data:`STOPWORD_CATEGORIES`; duplicate words are a load error. The
-    returned dict is the classification table for
-    :mod:`khmerthings.condense`.
-
-    >>> load_stopwords()["ទេ"]
-    'particle'
-    """
-    text = (resources.files("khmerthings") / "data" / _STOPWORDS_FILE).read_text("utf-8")
-    return parse_stopwords(text.splitlines())
-
-
-def parse_stopwords(lines: Iterable[str]) -> dict[str, str]:
-    """Parse and validate stopword-mapping lines (see :func:`load_stopwords`)."""
-    mapping: dict[str, str] = {}
-    for raw in lines:
-        line = raw.strip().strip(ZERO_WIDTH_SPACE)
-        if not line or line.startswith("#"):
-            continue
-        word, sep, category = line.partition("\t")
-        word = word.strip().strip(ZERO_WIDTH_SPACE)
-        category = category.strip()
-        if not sep or not word or not category:
-            raise ValueError(f"malformed stopwords line (want 'word<TAB>category'): {raw!r}")
-        _check_khmer_nfc(word, "stopword", raw)
-        if category not in STOPWORD_CATEGORIES:
-            raise ValueError(
-                f"unknown stopword category {category!r} (allowed: "
-                f"{', '.join(sorted(STOPWORD_CATEGORIES))}) in line: {raw!r}"
-            )
-        if word in mapping:
-            raise ValueError(f"duplicate stopword: {word!r}")
-        mapping[word] = category
-    return mapping
-
-
-@cache
-def load_romanizations() -> dict[str, str]:
-    """Load the built-in Khmer-word → Latin romanization exception map.
-
-    The ``romanize.txt`` data file has one mapping per line as
-    ``khmer<TAB>latin``; blank lines and ``#`` comments are ignored. The key
-    must be NFC-normalized Khmer text; the value is a non-empty Latin string
-    (any spelling, spaces allowed). Duplicate keys are a load error. The
-    returned dict overrides the rule engine in :mod:`khmerthings.romanize`.
-
-    >>> load_romanizations()["ភ្នំពេញ"]
-    'phnom penh'
-    """
-    text = (resources.files("khmerthings") / "data" / _ROMANIZE_FILE).read_text("utf-8")
-    return parse_romanizations(text.splitlines())
-
-
-def parse_romanizations(lines: Iterable[str]) -> dict[str, str]:
-    """Parse and validate romanization-mapping lines (see :func:`load_romanizations`)."""
-    mapping: dict[str, str] = {}
-    for raw in lines:
-        line = raw.strip().strip(ZERO_WIDTH_SPACE)
-        if not line or line.startswith("#"):
-            continue
-        khmer, sep, latin = line.partition("\t")
-        khmer = khmer.strip().strip(ZERO_WIDTH_SPACE)
-        latin = latin.strip()
-        if not sep or not khmer or not latin:
-            raise ValueError(f"malformed romanize line (want 'khmer<TAB>latin'): {raw!r}")
-        _check_khmer_nfc(khmer, "khmer", raw)
-        if not latin.isascii():
-            raise ValueError(f"romanization is not ASCII in line: {raw!r}")
-        if khmer in mapping:
-            raise ValueError(f"duplicate romanization key: {khmer!r}")
-        mapping[khmer] = latin
     return mapping
 
 

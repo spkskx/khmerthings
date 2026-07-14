@@ -19,16 +19,9 @@ Deterministic Khmer language tools in Python. Note: the repo directory is
   Data files under `src/khmerthings/data/`:
   `words.txt` (core), `names.txt` (names, surnames, titles), `modern.txt`
   (slang, informal, loanwords, trending), `variants.txt` (misspelling→
-  canonical map, two tab-separated columns), `stopwords.txt` (function
-  words→category, two tab-separated columns, for the condenser),
-  `romanize.txt` (Khmer word→Latin spelling, two tab-separated columns, for
-  the romanizer). All are growable; the word files merge via
+  canonical map, two tab-separated columns). All are growable; the word files merge via
   `load_lexicon(*sources)`, the variants map loads via `load_variants()`
-  (its keys double as the `variants` lexicon source), the stopword map loads
-  via `load_stopwords()` (word→one of `STOPWORD_CATEGORIES`; every stopword
-  must also be a real word in the word files, enforced by tests), and the
-  romanization exception map loads via `load_romanizations()` (Khmer key must
-  be NFC/Khmer-only, Latin value ASCII).
+  (its keys double as the `variants` lexicon source).
 - **Zero runtime dependencies.** Stdlib only. Dev tools (pytest, ruff, mypy)
   are the only allowed dependencies.
 - **Tests are the top priority.** Every module ships with table-driven unit
@@ -93,45 +86,23 @@ considering any change done.
    one space after, via the `chars.is_khmer_sentence_stop` primitive; a
    pure string scan, no tokenizer/lexicon). All three are independently
    callable. Idempotent.
-11. `condense.py` — content-word extractor (`content_words`,
-    `condense_text`, `content_tokens`). *Lossy* — the only tool that does
-    not reproduce its input. Tokenizes against the caller's lexicon unioned
-    with every stopword (`_content_lexicon`), drops punctuation/whitespace
-    and any Khmer word whose stopword category is in the active `remove` set
-    (`DEFAULT_REMOVE` keeps the intent-bearing categories pronoun/auxiliary/
-    question).
-12. `romanize.py` — phonetic romanizer (`romanize`), UNGEGN-style. Tokenizes
-    against the caller's lexicon unioned with the romanization-exception keys
-    (`_exception_lexicon`); each Khmer word is looked up in the exception map
-    (`load_romanizations()`) first, else romanized cluster-by-cluster with a
-    register-aware (1st/2nd series) rule engine — subscripts form onset
-    clusters, dependent vowels read per register, a bare final consonant reads
-    as a coda, register shifters ៉/៊ flip the series. Khmer digits → Arabic;
-    non-Khmer passes through; adjacent Khmer words are space-separated.
-    *Phonetic, not reversible.*
-13. `numerals.py` — numeral tool (`arabic_to_khmer`, `khmer_to_arabic`,
-    `number_to_words`). Digit conversion is a pure `str.translate` over the
-    two 0–9 ranges (reversible on the digit subset); `number_to_words` spells
-    an integer via the recursive decimal-unit system (in-module tables, no
-    data file). No lexicon.
-14. `cli.py` — argparse subcommands, one per tool (`khmerthings count ...`,
+11. `phonetics.py` — private deterministic pronunciation approximation used only
+    to break spelling-suggestion ties; not public API or CLI.
+12. `cli.py` — argparse subcommands, one per tool (`khmerthings count ...`,
     `khmerthings segment ...`, `khmerthings sort ...`,
     `khmerthings spellcheck ...` (exit 1 = issues found; `--only
     {variants,unknown}` runs a single detection kind),
     `khmerthings spellfix ...`,
     `khmerthings normalize ...` (`--only {words,sentences}` runs a single
-    pass), `khmerthings condense ...` (`--words`, `--remove`),
-    `khmerthings romanize ...`,
-    `khmerthings numerals ...` (`--to {khmer,arabic,words}`),
-    `khmerthings validate ...` (`--json`; exit 1 = issues found),
+    pass), `khmerthings validate ...` (`--json`; exit 1 = issues found),
     `khmerthings update`, and `khmerthings uninstall` (prompts before removal)).
 
 The deterministic tool surface is **complete and frozen**; the current phase
 is consolidation (data depth + correctness hardening), not new tools.
 Semantic/understanding-level NLP is deliberately *not* planned — intent
 detection, paragraph categorization, and a POS tagger would all require
-probabilistic inference, which conflicts with the determinism guarantee;
-content extraction uses the curated stoplist instead. Should a new
+probabilistic inference, which conflicts with the determinism guarantee.
+Should a new
 *deterministic* tool ever be added, it follows the established pattern: new
 module in `src/khmerthings/`, re-export in `__init__.py`, new CLI subcommand in
 `cli.py`, new `tests/test_<module>.py`, and a **per-tool document
@@ -202,11 +173,5 @@ change — not as an afterthought:
   stay canonical). Tests enforce that every canonical exists in the word
   files and that no variant key is itself a canonical entry (so legitimate
   name spellings such as ចំរើន can never be listed as misspellings).
-- `stopwords.txt`: one `word<TAB>category` mapping per line, grouped by
-  category. Category must be in `STOPWORD_CATEGORIES`; the word must be a
-  real entry in the word files (tests enforce). Keep the list conservative —
-  omit verb/preposition-ambiguous words (ទៅ, មក, ណា) rather than risk
-  stripping content. Adding a word here classifies it; it does not add a new
-  spelling.
 - Khmer test strings: verify codepoints carefully (visually identical strings
   can differ, e.g. ្ត vs ្ដ); assert exact expected values, hand-verified.

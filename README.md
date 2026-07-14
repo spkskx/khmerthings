@@ -25,9 +25,6 @@ its own detailed document:
 | **Spellchecker** — find Khmer misspellings & unknown words | `khmerthings spellcheck` | `check_spelling` | [docs/spellcheck.md](docs/spellcheck.md) |
 | **Spellfixer** — rewrite known misspellings to canonical | `khmerthings spellfix` | `fix_spelling` | [docs/spellfix.md](docs/spellfix.md) |
 | **Normalizer** — spellfix + re-space into clean, ready-to-use text | `khmerthings normalize` | `normalize_text` | [docs/normalize.md](docs/normalize.md) |
-| **Condenser** — strip function words, keep only content words | `khmerthings condense` | `condense_text`, `content_words` | [docs/condense.md](docs/condense.md) |
-| **Romanizer** — phonetically romanize Khmer into Latin | `khmerthings romanize` | `romanize` | [docs/romanize.md](docs/romanize.md) |
-| **Numerals** — convert digits & spell numbers in Khmer | `khmerthings numerals` | `arabic_to_khmer`, `khmer_to_arabic`, `number_to_words` | [docs/numerals.md](docs/numerals.md) |
 | **Orthography validator** — report definite Khmer encoding-structure errors | `khmerthings validate` | `validate_orthography` | [docs/orthography.md](docs/orthography.md) |
 
 ## Install
@@ -76,13 +73,10 @@ fix_spelling("ខ្ញុំសំរាប់ការងារ")             
   hand-curated set of growable wordlists — `words` (core vocabulary),
   `names` (people's names & titles), `modern` (slang, loanwords, trending
   terms), `variants` (common misspellings mapped to their canonical
-  spelling), `stopwords` (function words tagged by category, for the
-  condenser), and `romanize` (whole-word Latin spellings, for the romanizer)
-  — 1,900+ entries and growing, each verified entry by entry; no wordlist is
+  spelling) — 1,900+ entries and growing, each verified entry by entry; no wordlist is
   imported wholesale.
 - **Lossless**: no character is ever dropped — unknown Khmer spans are
-  reported, not discarded. (The one exception is the condenser, which is
-  lossy by design — it *removes* function words.)
+  reported, not discarded.
 - **Tested first**: every module ships with table-driven unit tests and
   invariant checks (500+ tests and growing).
 
@@ -96,15 +90,14 @@ docstrings if you want to build on them directly.
 The deterministic tool surface is **complete and frozen** — the focus now is
 depth, not breadth: growing the data and hardening what's already here.
 
-- ✅ Word counter, line sorter, word breaker, spellchecker & spellfixer,
-  normalizer, condenser (content-word extraction), romanizer, numerals,
-  orthography validator
+- ✅ Word segmentation and counting, Khmer dictionary-order sorting, spelling
+  checking and fixing, normalization, and orthography validation
 - ⏳ Wordlist growth across all four sources (`words`, `names`, `modern`,
-  `variants`) plus the condenser's `stopwords` list — hand-curated batches
-  each release; the accuracy lever for every dictionary-based tool, including
-  the spellchecker's verdicts, suggestions, and fixes
-- ⏳ Quality & correctness — known-answer regression suites for the romanizer
-  and sorter, invariant/edge-case hardening, and profiling of the hot paths
+  `variants`) — hand-curated batches each release; the accuracy lever for every
+  dictionary-based tool, including spelling verdicts, suggestions, and fixes
+- ⏳ Quality & correctness — known-answer regression suites for segmentation,
+  spelling, validation, and sorting; invariant/edge-case hardening; profiling
+  of hot paths
 
 **Out of scope / not planned:** semantic ("understanding-level") NLP that
 would require probabilistic models — intent detection, paragraph

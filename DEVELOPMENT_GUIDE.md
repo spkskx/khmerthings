@@ -64,8 +64,7 @@ Follow the existing bottom-up architecture (chars → clusters → lexicon →
 tokenizer → tools). To add a tool, e.g. a hypothetical `foo`:
 
 1. Create `src/khmerthings/foo.py`, building on the existing
-   primitives (`segment_clusters`, `Lexicon.longest_match`, `tokenize`,
-   and — for meaning-only input — `content_words`).
+   primitives (`segment_clusters`, `Lexicon.longest_match`, and `tokenize`).
 2. Re-export the public API in `src/khmerthings/__init__.py` (`__all__`).
 3. Add a CLI subcommand in `src/khmerthings/cli.py` (`khmerthings foo`).
 4. Add `tests/test_foo.py` with unit + invariant tests.
@@ -77,9 +76,7 @@ tokenizer → tools). To add a tool, e.g. a hypothetical `foo`:
 
 ## Editing the wordlists (`src/khmerthings/data/`)
 
-Five growable files. The first four merge on demand via
-`load_lexicon(*sources)`; `stopwords.txt` loads separately via
-`load_stopwords()`:
+Four growable files merge on demand via `load_lexicon(*sources)`:
 
 | File | Source name | Contents |
 |---|---|---|
@@ -87,8 +84,6 @@ Five growable files. The first four merge on demand via
 | `names.txt` | `names` | personal names, surnames, honorific titles |
 | `modern.txt` | `modern` | slang, informal register, loanwords, trending terms |
 | `variants.txt` | `variants` | common misspellings → canonical spelling (two columns) |
-| `stopwords.txt` | — | function words → category, for the condenser (two columns); every word must also exist in the word files |
-| `romanize.txt` | — | Khmer word → Latin spelling, for the romanizer (two columns); key is NFC Khmer, value is ASCII |
 
 Put new entries in the right file: standard dictionary vocabulary → `words`;
 anything people are called → `names`; register that shifts with time
