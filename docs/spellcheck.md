@@ -9,8 +9,9 @@ issue are reported:
   (e.g. deprecated orthography like សំរាប់ for សម្រាប់). The canonical
   spelling is reported as the single suggestion.
 - **`unknown`** — a Khmer span that matches no dictionary word. It gets up
-  to N suggestions: dictionary words ranked by cluster-level edit distance,
-  ties broken by Khmer dictionary order.
+  to N suggestions: dictionary words ranked first by cluster-level edit
+  distance, then pronunciation similarity, NiDA desktop keyboard proximity,
+  and finally Khmer dictionary order.
 
 The checker only reports — it never modifies text. To rewrite known
 misspellings automatically, use the [spellfixer](spellfix.md).
@@ -239,9 +240,12 @@ check_spelling("ខ្ញុំស្រឡាញភាសាខ្មែរ", m
 3. Suggestions for unknown spans are computed by Levenshtein edit distance
    measured in **character clusters** (not codepoints — dropping one
    diacritic is one edit), bounded by 1 for spans of up to 3 clusters and
-   2 for longer spans, against every word of the lexicon. Candidates are
-   ranked by distance, then Khmer dictionary order, and truncated to
-   `max_suggestions`. Spans longer than 8 clusters get no suggestions —
+   2 for longer spans, against every word of the lexicon. Ties are ranked by
+   deterministic phonetic romanization distance, then physical key distance
+   on the standard NiDA desktop layout, then Khmer dictionary order. This
+   keeps spelling closeness primary while preferring plausible sound-alike
+   and neighboring-key errors. Results are truncated to `max_suggestions`.
+   Spans longer than 8 clusters get no suggestions —
    they are almost certainly several adjacent unknown words, not one
    misspelled word.
 4. `check_spelling` is implemented as
@@ -262,9 +266,10 @@ check_spelling("ខ្ញុំស្រឡាញភាសាខ្មែរ", m
   false positives on names and slang unless you `--include names,modern`.
   Growing the wordlists and the variants map improves detection and
   suggestions with no code changes.
-- **Suggestions are edit-distance neighbors, not context.** They are
-  ranked by spelling similarity only; the tool never guesses from
-  surrounding words, and multi-word unknown spans (over 8 clusters) get no
+- **Suggestions are form-based, not contextual.** Spelling distance remains
+  primary; pronunciation and NiDA desktop keyboard proximity break ties.
+  The tool never guesses from surrounding words, other keyboard layouts are
+  not modeled, and multi-word unknown spans (over 8 clusters) get no
   suggestions.
 
 ## Task recipes

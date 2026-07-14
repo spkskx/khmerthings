@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Expanded the core lexicon with common complete derived words, including
   `អ្នកស្រែ`, `អ្នករាយការណ៍`, `ការរាយការណ៍`, `ភាពស្អាត`, and both accepted
   spellings of `សេចក្តីស្រឡាញ់`, so longest-match tokenization preserves them.
+- **Spellchecker:** unknown-word suggestions now use phonetic similarity and
+  NiDA desktop keyboard proximity to break cluster-edit-distance ties before
+  Khmer dictionary order. The fixer remains conservative and rewrites only
+  curated variants.
 - Added a `curl | sh` installer for the `khmerthings` CLI on macOS and Linux.
 - **Orthography validator:** `validate_orthography()` and `khmerthings validate`
   report definite Khmer Unicode structure errors with stable issue codes and NFC

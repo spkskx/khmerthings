@@ -6,7 +6,8 @@ as the lexicon data files grow:
 - A Khmer span is an issue either because it is a *known misspelling* from
   the variants map (``VARIANT``, with its canonical spelling as the single
   suggestion) or because it matches no lexicon word at all (``UNKNOWN``,
-  with suggestions ranked by cluster-level edit distance to lexicon words).
+  with suggestions ranked by cluster edit distance, pronunciation, NiDA
+  keyboard proximity, then Khmer dictionary order).
 - :func:`check_variants` reports only ``VARIANT`` issues (cheap dictionary
   lookup); :func:`check_unknown` reports only ``UNKNOWN`` issues (the
   expensive edit-distance search, for suggestions); :func:`check_spelling`
@@ -25,6 +26,7 @@ from functools import cache
 
 from khmerthings.clusters import segment_clusters
 from khmerthings.lexicon import Lexicon, _checking_lexicon, default_lexicon, load_variants
+from khmerthings.romanize import _romanize_word
 from khmerthings.sorting import SortKey, khmer_sort_key
 from khmerthings.tokenizer import TokenType, tokenize
 
@@ -41,6 +43,20 @@ __all__ = [
 #: segmentation lumps adjacent unknown words into one span, and edit-distance
 #: suggestions against single lexicon words would be meaningless for it.
 _MAX_SUGGEST_CLUSTERS = 8
+
+# Physical positions on the standard NiDA desktop layout. Shifted and
+# unshifted Khmer characters share a key; only letters and marks matter here.
+_NIDA_ROWS = (
+    ("ឆឹេរតយុិោផៀឪ", "ឈឺែឬទួូីៅភឿឧ"),
+    ("ាសដថងហ្កលើ់", "ាំៃឌធអះញគឡោះ"),
+    ("ឋខចវបនមុំ។៊", "ឍឃជេះពណំុះ៕?"),
+)
+_NIDA_POSITION = {
+    char: (row, column)
+    for row, states in enumerate(_NIDA_ROWS)
+    for state in states
+    for column, char in enumerate(state)
+}
 
 
 class IssueKind(Enum):
@@ -81,21 +97,52 @@ def _edit_distance_within(a: Sequence[str], b: Sequence[str], bound: int) -> int
     return previous[-1] if previous[-1] <= bound else None
 
 
+def _keyboard_distance(a: Sequence[str], b: Sequence[str]) -> int:
+    """NiDA physical-key distance for substitutions at aligned cluster positions."""
+    score = 0
+    for cluster_a, cluster_b in zip(a, b, strict=False):
+        if cluster_a == cluster_b:
+            continue
+        position_a = _NIDA_POSITION.get(cluster_a[0])
+        position_b = _NIDA_POSITION.get(cluster_b[0])
+        if position_a is not None and position_b is not None:
+            score += abs(position_a[0] - position_b[0]) + abs(position_a[1] - position_b[1])
+        else:
+            score += 99
+    return score
+
+
 def _suggest(span: str, lexicon: Lexicon, max_suggestions: int) -> tuple[str, ...]:
-    """Lexicon words nearest to *span*, ranked by (distance, Khmer order)."""
+    """Lexicon words nearest by spelling, sound, keyboard, then Khmer order."""
     if max_suggestions <= 0:
         return ()
     clusters = segment_clusters(span)
     if len(clusters) > _MAX_SUGGEST_CLUSTERS:
         return ()
     bound = 1 if len(clusters) <= 3 else 2
-    ranked: list[tuple[int, SortKey, str]] = []
+    pronunciation = tuple(_romanize_word(span))
+    ranked: list[tuple[int, int, int, SortKey, str]] = []
     for word, word_clusters in _clusterized(lexicon):
         distance = _edit_distance_within(clusters, word_clusters, bound)
         if distance is not None:
-            ranked.append((distance, khmer_sort_key(word), word))
+            word_pronunciation = tuple(_romanize_word(word))
+            phonetic = _edit_distance_within(
+                pronunciation,
+                word_pronunciation,
+                max(len(pronunciation), len(word_pronunciation)),
+            )
+            assert phonetic is not None
+            ranked.append(
+                (
+                    distance,
+                    phonetic,
+                    _keyboard_distance(clusters, word_clusters),
+                    khmer_sort_key(word),
+                    word,
+                )
+            )
     ranked.sort()
-    return tuple(word for _, _, word in ranked[:max_suggestions])
+    return tuple(word for _, _, _, _, word in ranked[:max_suggestions])
 
 
 def check_variants(text: str, lexicon: Lexicon | None = None) -> list[SpellIssue]:

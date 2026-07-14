@@ -155,6 +155,16 @@ class TestCheckUnknown:
 
 
 class TestSuggestions:
+    def test_phonetic_similarity_breaks_edit_distance_ties(self) -> None:
+        lex = Lexicon(["កទ", "កព"])
+        issues = check_spelling("កប", lex)
+        assert issues[0].suggestions == ("កព", "កទ")
+
+    def test_nida_keyboard_proximity_breaks_phonetic_ties(self) -> None:
+        lex = Lexicon(["កដ", "កថ"])
+        issues = check_spelling("កត", lex)
+        assert issues[0].suggestions == ("កថ", "កដ")
+
     def test_ranked_by_distance_then_khmer_order(self) -> None:
         # Against កខគង: កខគច and កខគជ are 1 edit away (Khmer order ច < ជ),
         # កខចឆ is 2 edits away — distance ranks first, Khmer order breaks ties.

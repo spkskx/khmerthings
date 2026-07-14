@@ -77,7 +77,8 @@ considering any change done.
    naive codepoint order is wrong for subscripts).
 9. `spellcheck.py` — spellchecker & spellfixer. `check_variants` (VARIANT
    only, plain dict lookup) and `check_unknown` (UNKNOWN only, cluster-level
-   edit distance ranked by `(distance, khmer_sort_key)`) are the two
+   edit distance ranked by `(distance, phonetic_distance,
+  nida_keyboard_distance, khmer_sort_key)`) are the two
    detection primitives; `check_spelling` is a thin wrapper merging both,
    sorted by `start`. `fix_spelling` rewrites VARIANT spans only, never
    UNKNOWN. All tokenize against the caller's lexicon unioned with the
