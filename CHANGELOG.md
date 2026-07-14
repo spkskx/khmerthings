@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added a `curl | sh` installer for the `khmerthings` CLI on macOS and Linux.
 - **Orthography validator:** `validate_orthography()` and `khmerthings validate`
   report definite Khmer Unicode structure errors with stable issue codes and NFC
   offsets. Validation is deterministic, conservative, read-only, and available

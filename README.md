@@ -33,9 +33,17 @@ its own detailed document:
 ## Install
 
 ```sh
-pip install khmerthings          # library
+pip install khmerthings         # library
 uv tool install khmerthings     # global CLI
 ```
+
+Or install the CLI with one command (installs `uv` first when needed):
+
+```sh
+curl -LsSf https://raw.githubusercontent.com/spkskx/khmerthings/main/install.sh | sh
+```
+
+Requires macOS or Linux. Verify the install with `khmerthings --help`.
 
 ## A taste
 
